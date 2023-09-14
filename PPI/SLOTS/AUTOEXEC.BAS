@@ -2,7 +2,7 @@
 020 ' ESTE COMAMNDO VERIFICA QUAIS SLOTS
 030 ' POSSUEM MEMORIA RAM CONECTADA
 040 ' ==================================
-050 ?
+050 KEY OFF:CLS
 060 ? "================================"
 070 ? "SLOTS"
 080 ? "================================"

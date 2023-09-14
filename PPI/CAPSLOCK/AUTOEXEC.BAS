@@ -1,7 +1,7 @@
 010 ' ==================================
 020 ' VERIFICAR O STATUS DO CAPSLOCK
 040 ' ==================================
-050 ?
+050 KEY OFF:CLS
 060 ? "================================"
 070 ? "APERTE QUALQUER TECLA           "
 080 ? "OU <ESC> PARA SAIR              "
@@ -13,6 +13,6 @@
 160 GOTO 50
 170 RUN "AUTOEXEC.BAS"
 180 ?"CAPS EM MAIUSCULAS"
-190 GOTO 50
+190 GOTO 60
 200 ? "caps em minusculas"
-210 GOTO 50 
+210 GOTO 60 

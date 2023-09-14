@@ -1,21 +1,27 @@
 ; =====================================
+; CHAMADAS DA BIOS RELACIONADAS
+; A PPI DO MSX 
+; =====================================
+
+; =====================================
 ; 0138h (RSLREG)
 ; =====================================
-; Function:	Reads a byte from I/O port 
-;           0A8h to register A
-; Entry:	---
-; Output:	A
-; Modify:	A
+; DESCRICAO	: 	LE UM BYTE DA PORTA DE 
+;			  	I/O 0A8h PARA O 
+;				ACUMULADOR
+; PARMETROS	:	---
+; SAIDA 	: 	A
+; MODIFICA 	: 	A
 ; =====================================
 
 ; =====================================
 ; 013Bh (WSLREG)
 ; =====================================
-; Function:	Writes register A to I/O 
-;           port 0A8h
-; Entry:	A
-; Output:	---
-; Modify:	---
+; DESCRICAO	:	ESCREVE O REGISTRADOR A
+;               NA PORTA I/O 0A8h
+; PARMETROS	:	A
+; SAIDA		:	---
+; MODIFICA	:	---
 ; =====================================
 
 ; =====================================
@@ -97,19 +103,36 @@
 ; located.
 ; This routine disables the interrupts.
 ; =====================================
+; =====================================
+; LE A PORTA A8H
+; =====================================
+include "HWD\BIOS.ASM"
+include "HWD\CONST.ASM"
+include "HWD\VAR.ASM"
 
-; Back to Basic from MSX-DOS 
+org romArea
+	db "AB"
+	dw ProgramStart
+	db 00,00,00,00,00
 
-MNROM	equ	0FCC1h
-ENASLT 	equ	00024h
-RETURN	equ	0409Bh
+ProgramStart:
+	call LimparTela
+  	call INIT32
+    ld hl,Message1
+  	call ImprimeString
+	call RSLREG
+	call ImprimeNumero
+  	DI
+  	Halt
 
-	org	0D000h
-DEBUT:
-	ld	a,(MNROM)
-	ld	hl,0
-	call	ENASLT	; Select main ROM on page 0 (0000h~3FFFh)
-	ld	a,(MNROM)
-	ld	hl,04000h
-	call	ENASLT	; Select main ROM on page 1 (4000h~7FFFh)
-	jp	RETURN	; 
+; =============================================================================
+; FIM PROGRAMA
+; =============================================================================
+include "HWD\LIB.ASM"
+include "HWD\PT-BR.ASM"
+
+; =============================================================================
+; PADDING
+; =============================================================================
+romPad:
+ ds romSize-(romPad-romArea),0
