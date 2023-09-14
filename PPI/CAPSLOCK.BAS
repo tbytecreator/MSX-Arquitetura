@@ -1,6 +1,5 @@
 010 ' ==================================
-020 ' ESTE COMAMNDO VERIFICA QUAIS SLOTS
-030 ' POSSUEM MEMORIA RAM CONECTADA
+020 ' VERIFICAR O STATUS DO CAPSLOCK
 040 ' ==================================
 050 ?
 060 ? "================================"
