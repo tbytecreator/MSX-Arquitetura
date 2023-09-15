@@ -27,18 +27,19 @@
 ; =====================================
 ; 000Ch (RDSLT)
 ; =====================================
-; Function:	Reads one byte from memory 
-; of the slot specified.
-; Entry:	A = Slot ID to read 
-; (F000EEPP format)
-; HL = Address of byte to read 
-; (from 0000h to BFFFh)
-; Output:	A = Byte read
-; Modify:	AF, BC, DE
-; Notes:	
-; This routine disables the 
-; interrupts. This routine also exists 
-; under MSX-DOS.
+; DESCRICAO	:	LE UM BYTE DE MEMORIA 
+; 				DE UM SLOT ESPECIFICADO
+; PARMETROS	:	A = ID DO SLOT A SER 
+;               LIDO NO FORMATO 
+; 				F000EEPP
+; 				HL = ENDERECO DO BYTE A 
+; 				A SER LIDO 
+;				(0000h ATE BFFFh)
+; SAIDA		:	A = Byte read
+; MODIFICA	:	AF, BC, DE
+; NOTAS		:	ESSA ROTINA DESABILITA 
+;               AS INTERRUPÇÕES E 
+;               EXISTE NO MSX-DOS.
 ; =====================================
 
 ; =====================================
@@ -103,6 +104,7 @@
 ; located.
 ; This routine disables the interrupts.
 ; =====================================
+
 ; =====================================
 ; LE A PORTA A8H
 ; =====================================
