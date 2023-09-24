@@ -4,7 +4,7 @@
 ; Manoel Neto 2019-09-25
 ; Variaveis utilizadas no PROGRAMA
 ; =============================================================================
-NumCentenas  		equ ramArea     ; Variavel => Usada em PrintNumber
-NumDezenas  		equ ramArea+1   ; Variavel => Usada em PrintNumber
-NumUnidades  		equ ramArea+2   ; Variavel => Usada em PrintNumber
+NumCentenas  		equ ramArea     ; E000 Variavel => Usada em ImprimirNumero
+NumDezenas  		equ ramArea+1   ; E001 Variavel => Usada em ImprimirNumero
+NumUnidades  		equ ramArea+2   ; E002 Variavel => Usada em ImprimirNumero
 ; =============================================================================
