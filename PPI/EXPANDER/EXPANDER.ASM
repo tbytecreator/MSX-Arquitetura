@@ -70,7 +70,7 @@ Slot3:
 	; =======================
   	ld hl, Message3
 	call ImprimeString
-	ld a,(EXPTBL+3)	;Flag for slot 4
+	ld a,(EXPTBL+3)	
 	cp 0 
 	jp z,NaoExpandido3
 	ld hl,Message5
