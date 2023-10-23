@@ -1,13 +1,23 @@
-05 SCREEN 0:KEY OFF:COLOR 15,1,1
-10 ?"-------------------------------"
-20 ?"UTILITARIOS TBYTECREATOR       "
-30 ?"-------------------------------"
-40 ?"(D)ESCOBRIR SLOTS EXPADIDOS    "
-50 ?"-------------------------------"
-60 OP$=INPUT$(1)
-70 IF OP$="D" OR OP$="d" THEN 100 
-80 GOTO 10 
-100 BLOAD"EXPANDER.BIN"
+010 SCREEN 0:KEY OFF:COLOR 15,1,1
+020 ?"-------------------------------"
+030 ?"UTILITARIOS TBYTECREATOR PPI   "
+040 ?"-------------------------------"
+050 ?"1.DESCOBRIR SLOTS EXPADIDOS    "
+060 ?"2.VERIFICAR CAPS LOCK          "
+070 ?"-------------------------------"
+080 OP$=INPUT$(1)
+090 IF OP$="1" THEN 200
+100 IF OP$="2" THEN 300 
+110 GOTO 20
+
+200 ' EXPANDER
+210 BLOAD"EXPANDER.BIN"
+220 DEF USR0=&HC000
+230 A=USR0(0)
+240 GOTO 20 
+
+200 ' CAPS LOCK
+210 BLOAD"CAPS.BIN"
 110 DEF USR0=&HC000
 120 A=USR0(0)
-130 GOTO 10 
+130 GOTO 20
