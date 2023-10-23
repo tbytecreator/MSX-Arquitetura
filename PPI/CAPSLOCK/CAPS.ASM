@@ -1,5 +1,5 @@
 ; =====================================
-; PPI - DESCOBRE SLOTS EXPANDIDOS
+; PPI - DESCOBRE O STATUS DO CAPS LOCK
 ; =====================================
 include "HWD\CONST.ASM"
 include "HWD\BIOS.ASM"
@@ -8,79 +8,20 @@ include "HWD\VAR.ASM"
 org prgArea
 
 Inicio:
-	;call LimparTela
-	;call INITXT
-Slot0:
-	; =======================
-	; SLOT 0
-	; =======================
-  	ld hl, Message0
-	call ImprimeString
-	ld a,(EXPTBL)	
-	cp 0 
-	jp z,NaoExpandido0
-	ld hl,Message5
-	call ImprimeString
-	jp Slot1
-NaoExpandido0:
-	ld hl,Message4
-	call ImprimeString
-	call NovaLinha
-	; =======================
 
-Slot1:
+LePortaC:
 	; =======================
-	; SLOT 1
+	; LE A PORTA DA PPI 
 	; =======================
-  	ld hl, Message1
-	call ImprimeString
-	ld a,(EXPTBL+1)
-	cp 0 
-	jp z,NaoExpandido1
-	ld hl,Message5
-	call ImprimeString
-	jp Slot2
-NaoExpandido1:
-	ld hl,Message4
-	call ImprimeString
-	call NovaLinha
-	; =======================
-
-Slot2:
-	; =======================
-	; SLOT 2
-	; =======================
-  	ld hl, Message2
-	call ImprimeString
-	ld a,(EXPTBL+2)	
-	cp 0 
-	jp z,NaoExpandido2
-	ld hl,Message5
-	call ImprimeString
-	jp Slot3
-NaoExpandido2:
-	ld hl,Message4
-	call ImprimeString
-	call NovaLinha
-	; =======================
-
-Slot3:
-	; =======================
-	; SLOT 3
-	; =======================
-  	ld hl, Message3
-	call ImprimeString
-	ld a,(EXPTBL+3)	
-	cp 0 
-	jp z,NaoExpandido3
-	ld hl,Message5
+  	ld a,(CAPST)
+	cp 0
+	jp z,Desligado
+	ld hl,Message6
 	call ImprimeString
 	jp EndProgram
-NaoExpandido3:
-	ld hl,Message4
+Desligado:
+	ld hl,Message7
 	call ImprimeString
-	call NovaLinha
-	; =======================
 EndProgram:
 	call CHGET
 

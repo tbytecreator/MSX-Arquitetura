@@ -13,3 +13,7 @@ Message4:
   db "NAO EXPANDIDO.",13
 Message5:
   db "EXPANDIDO!",13
+Message6:
+  db "Caps ligado",13
+Message7:
+  db "Caps desligado",13
