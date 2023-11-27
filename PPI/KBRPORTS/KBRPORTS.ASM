@@ -13,7 +13,8 @@ include "HWD\BIOS.ASM"
 ;SNSMAT:  EQU     0x0141
 
 org prgArea
-START:  XOR A 
+START:  CALL ERAFNK
+        XOR A 
         CALL CLS
 SCAN:   LD      C,0             ;C := LINHA DA MATRIZ DE TECLADO
 SC1:    LD      A,C
