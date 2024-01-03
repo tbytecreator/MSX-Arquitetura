@@ -1,21 +1,9 @@
 ; =====================================
-; CHAMADAS DA BIOS RELACIONADAS
-; A PPI DO MSX 
+; LEITURA DA PORTA DO VDP 
 ; =====================================
 
 ; =====================================
-; 0138h (RSLREG)
-; =====================================
-; DESCRICAO	: 	LE UM BYTE DA PORTA DE 
-;			  	I/O 0A8h PARA O 
-;				ACUMULADOR
-; PARMETROS	:	---
-; SAIDA 	: 	A
-; MODIFICA 	: 	A
-; =====================================
-
-; =====================================
-; LE A PORTA A8H
+; LE O ENDERECO 0006H
 ; =====================================
 include "HWD\BIOS.ASM"
 include "HWD\CONST.ASM"
@@ -29,10 +17,10 @@ org romArea
 ProgramStart:
 	call LimparTela
   	call INIT32
-    ld hl,Message1
-  	call ImprimeString
-	call RSLREG
-	call ImprimeNumero
+	ld c,(0006H)		; LE A PORTA PADRAO DO VDP NO REGISTRADOR C
+	inc c				; SETA A PORTA DO REGISTRADOR DE STATUS NO C
+	in a,(c)			; LE O STATUS NO ACUMULADOR 
+	call ImprimeNumero  ; IMPRIME O REG DE STATUS DO VDP 
   	DI
   	Halt
 
@@ -40,7 +28,6 @@ ProgramStart:
 ; FIM PROGRAMA
 ; =============================================================================
 include "HWD\LIB.ASM"
-include "HWD\PT-BR.ASM"
 
 ; =============================================================================
 ; PADDING
