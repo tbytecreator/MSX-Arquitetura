@@ -3,7 +3,7 @@
 ; =====================================
 
 ; =====================================
-; LE O ENDERECO 0006H
+; LE AS PORTAS DO VDP (STATUS E DATA)
 ; =====================================
 include "HWD\BIOS.ASM"
 include "HWD\CONST.ASM"
@@ -17,10 +17,24 @@ org romArea
 ProgramStart:
 	call LimparTela
   	call INIT32
-	ld c,(0006H)		; LE A PORTA PADRAO DO VDP NO REGISTRADOR C
-	inc c				; SETA A PORTA DO REGISTRADOR DE STATUS NO C
-	in a,(c)			; LE O STATUS NO ACUMULADOR 
-	call ImprimeNumero  ; IMPRIME O REG DE STATUS DO VDP 
+	ld hl,Message0
+	call ImprimeString
+	call NovaLinha		; PULA LINHA
+	ld hl,Message1
+	call ImprimeString
+	call NovaLinha		; PULA LINHA
+	ld hl,Message2
+	call ImprimeString
+	ld a,(0006H)		; LE A PORTA PADRAO DO VDP NO ACUMULADOR
+	call ImprimeNumero  ; IMPRIME O REG DE STATUS DO VDP
+	call NovaLinha		; PULA LINHA
+	ld hl,Message3
+	call ImprimeString
+	ld a,(0007H)		; LE A PORTA PADRAO DO VDP NO ACUMULADOR
+	call ImprimeNumero  ; IMPRIME O REG DE STATUS DO VDP
+	call NovaLinha		; PULA LINHA
+	ld hl,Message1
+	call ImprimeString
   	DI
   	Halt
 
@@ -28,6 +42,7 @@ ProgramStart:
 ; FIM PROGRAMA
 ; =============================================================================
 include "HWD\LIB.ASM"
+include "HWD\PT-BR.ASM"
 
 ; =============================================================================
 ; PADDING
