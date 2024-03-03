@@ -3,7 +3,7 @@
 ; =====================================
 
 ; =====================================
-; LE AS PORTAS DO VDP (STATUS E DATA)
+; LE AS PORTAS DO VDP (READ E WRITE)
 ; =====================================
 include "HWD\BIOS.ASM"
 include "HWD\CONST.ASM"
