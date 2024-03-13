@@ -26,11 +26,12 @@ ProgramStart:
 	ld hl,Message2
 	call ImprimeString
 	ld a,(0006H)		; LE A PORTA PADRAO DO VDP NO ACUMULADOR
-	call ImprimeNumero  ; IMPRIME O REG DE STATUS DO VDP
+	call ImprimeNumero  ; IMPRIME A PORTA DE DADOS 
 	call NovaLinha		; PULA LINHA
 	ld hl,Message3
 	call ImprimeString
 	ld a,(0007H)		; LE A PORTA PADRAO DO VDP NO ACUMULADOR
+	inc a				; INCREMENTA SEGUNDO A TABELA 
 	call ImprimeNumero  ; IMPRIME O REG DE STATUS DO VDP
 	call NovaLinha		; PULA LINHA
 	ld hl,Message1

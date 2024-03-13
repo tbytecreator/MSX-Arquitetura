@@ -8,4 +8,4 @@ Message1:
 Message2:
   db "Porta de leitura=>",13
 Message3:
-  db "Porta de escrita=>",13
+  db "Porta de comando=>",13
