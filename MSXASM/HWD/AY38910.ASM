@@ -36,10 +36,10 @@
 ; Altera => Nada
 ; ================================================================================================
 PlaySound:
-  cp 0
-  jp z,Mudo
-  ld h,a			            ; Salva A
-	and %00000111	           	; Rotaciona os 3 bits mais baixos de -----XXX
+	cp 0
+  	jp z,Mudo
+  	ld h,a			            ; Salva A
+  	and %00000111	           	; Rotaciona os 3 bits mais baixos de -----XXX
 	rrca
 	rrca
 	rrca
