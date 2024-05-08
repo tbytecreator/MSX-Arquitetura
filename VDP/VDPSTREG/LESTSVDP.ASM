@@ -1,10 +1,6 @@
 ; =====================================
 ; LEITURA DO REG DE STATUS DO VDP
 ; =====================================
-
-; =====================================
-; LE AS PORTAS DO VDP (READ E WRITE)
-; =====================================
 include "HWD\BIOS.ASM"
 include "HWD\CONST.ASM"
 include "HWD\VAR.ASM"
@@ -15,8 +11,10 @@ org romArea
 	db 00,00,00,00,00
 
 ProgramStart:
-	CALL ReadVDPport
-	CALL ReadVDPStatus
+	CALL LimparTela		; LIMPA A TELA
+	CALL ReadVDPPorts	; LE AS PORTAS DO VDP PARA RAM
+	CALL ReadVDPStatus	; LE O STATUS DO VDP
+	CALL ImprimeNumero	; IMPRIME O NUMERO LIDO
   	DI
   	Halt
 
@@ -25,6 +23,7 @@ ProgramStart:
 ; =============================================================================
 include "HWD\LIB.ASM"
 include "HWD\PT-BR.ASM"
+include "HWD\TMS9918.ASM"
 
 ; =============================================================================
 ; PADDING
