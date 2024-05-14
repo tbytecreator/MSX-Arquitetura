@@ -21,7 +21,7 @@ ProgramStart:
 ; =============================================================================
 ; FIM PROGRAMA
 ; =============================================================================
-include "HWD\LIB.ASM"
+include "HWD\Z80.ASM"
 include "HWD\PT-BR.ASM"
 include "HWD\TMS9918.ASM"
 
