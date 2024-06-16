@@ -124,3 +124,72 @@ ReadVDPStatus:
 	;ld a,(STATFL)         ; le os flags de status do VDP
 ret
 ; =============================================================================
+
+; =============================================================================
+; LoadSpritesTable
+; =============================================================================
+; Carrega a Tabela de sprites
+; =============================================================================
+; Parametros
+; Nenhum
+; =============================================================================
+; Altera
+; Tabela de Sprites
+; =============================================================================
+LoadSpritesTable:
+	push bc
+	push de
+	push hl
+		ld bc,32             	; bytes a copiar
+  		ld de,ADRSPRITETBL	    ; tabela de sprites na VRAM
+  		ld hl,Sprites			; endereco dos sprites
+  		call LDIRVM             ; copio a tabela de sprites
+	pop hl
+	pop de
+	pop bc
+ret
+; =============================================================================
+
+; =============================================================================
+; PutSprite
+; =============================================================================
+;	Você pode colar até trinta e dois sprites (0 a 31)
+;	só quatro podem estar presentes na mesma linha horizontal
+;	o processador sempre irá desenhá-los uma linha abaixo de onde
+;	você realmente mandou
+; =============================================================================
+; VVVVVVVV					=> POSICAO VERTICAL
+; HHHHHHHH					=> POSICAO HORIZONTAL
+; PPPPPPPP					=> NUMERO DO PADRAO (TABELA DE PADROES)
+; E000CCCC					=> EARLY / 000 / COR DO SPRITE
+; =============================================================================
+; Parametros
+; A => Numero do Sprite na tabela de atributos
+; D => posicao Y
+; E => posicao X
+; B => Numero do sprite na tabela de sprites
+; C => Early / Cor
+; =============================================================================
+; ALTERA => Nada
+; =============================================================================
+PutSprite:
+	push hl
+	push af
+		push de				; salvo o valor de DE pq CALATR o altera
+			call CALATR		; pega o endereco do sprite na TBL de atributos
+		pop de				; retorno DE
+		ld a,d
+		call WRTVRM			; gravo a posicao Y
+		inc hl				; proximo endereco
+		ld a,e
+		call WRTVRM			; gravo a posicao X
+		inc hl				; proximo endereco
+		ld a,b
+		call WRTVRM			; Gravo o numero na tabela de padroes
+		inc hl				; proximo endereco
+		ld a,c
+		call WRTVRM			; gravo Early / Color
+	pop af
+	pop hl
+ret
+; =============================================================================

@@ -53,13 +53,13 @@ EndString:
 ret
 
 ; =============================================================================
-; Imprime um Numero
+; Imprime um Numero decimal
 ; =============================================================================
 ; A => Numero a ser impresso (8 bits, 255)
 ; =============================================================================
 ; Altera => A,HL,D
 ; =============================================================================
-ImprimeNumero:
+ImprimeDecimal:
 	ld hl,NumCentenas
 	ld (hl),&00
 	ld hl,NumDezenas
@@ -110,4 +110,30 @@ ImprimeUnidades:
 	ld a,(NumUnidades)
 	add a,&30
 	call CHPUT
+ret
+
+; =============================================================================
+; Imprime um numero binário
+; =============================================================================
+; A => Numero a ser impresso (8 bits, 255)
+; =============================================================================
+; Altera => A,HL,D
+; =============================================================================
+ImprimeBinario:
+	ld b,8
+ProximoBit:
+	rla
+	jr nc,ImprimeZero
+	push af
+		ld a,'1'
+		call CHPUT
+	pop af
+	jp ChecaFim
+ImprimeZero:
+	push af
+		ld a,'0'
+		call CHPUT
+	pop af
+ChecaFim:
+	djnz ProximoBit
 ret

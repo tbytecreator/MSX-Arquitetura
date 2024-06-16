@@ -43,6 +43,7 @@ include "DRAW.ASM"
 ; ====================================
 include "AST\PT-BR.ASM"
 include "AST\FONT.ASM"
+include "AST\SPRITES.ASM"
 ; ====================================
 ; Padding
 ; ====================================
