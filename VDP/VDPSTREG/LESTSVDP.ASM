@@ -47,7 +47,7 @@ vdpStatus:
   	Halt
 
 DesenhaSprite:
-	; BOTA SPRITE 1 DA NAVE
+	; BOTA SPRITE NA TELA
 	ld B, 0
 	ld C, 3
 	call PutSprite
