@@ -77,7 +77,8 @@ ADRSPRITETBL12:			equ 14336
 ; Nenhum
 ; =============================================================================
 ; Altera
-; Nada
+; VDPDATA 		=> porta de dados do MSX 
+; VDPCONTROL 	=> porta de comandos do MSX
 ; =============================================================================
 ReadVDPPorts:
     push af
@@ -136,7 +137,7 @@ LoadSpritesTable:
 	push de
 	push hl
 		ld bc,32             	; bytes a copiar
-  		ld de,ADRSPRITETBL	    ; tabela de sprites na VRAM
+  		ld de,ADRSPRITETBL12	; tabela de sprites na VRAM
   		ld hl,Sprites			; endereco dos sprites
   		call LDIRVM             ; copio a tabela de sprites
 	pop hl
