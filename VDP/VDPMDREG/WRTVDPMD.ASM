@@ -22,6 +22,9 @@ Fim:
 	di
 	halt
 ImprimeRegMode:
+	ld a,(RG0SAV)
+	call ImprimeBinario
+	call NovaLinha
 	ld a,(RG1SAV)
 	call ImprimeBinario
 	call NovaLinha
