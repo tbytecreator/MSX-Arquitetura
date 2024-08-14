@@ -13,8 +13,7 @@ org romArea
 ProgramStart:
 Screen0
 	call INITXT
-	call ImprimeRegMode
-	call NovaLinha 
+	call ImprimeRegMode 
 Screen1:
 	;call INIT32
 	;call ImprimeRegMode
