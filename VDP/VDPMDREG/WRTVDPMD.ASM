@@ -14,9 +14,11 @@ ProgramStart:
 Screen0
 	call INITXT
 	call ImprimeRegMode 
+	call CHGET
 Screen1:
-	;call INIT32
-	;call ImprimeRegMode
+	call INIT32
+	call ImprimeRegMode
+	call CHGET
 Fim:
 	di
 	halt

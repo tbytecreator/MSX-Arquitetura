@@ -44,8 +44,14 @@ ProgramStart:
 	; ==================================================
 	ld a,(RG1SAV)
 	set 4,a
-	ld b,129
+	ld b,a
+	call ImprimeBinario
+	call NovaLinha
+	call CHGET
+	call NovaLinha
+	ld a,129
 	call WR2VDPREG
+	ld a,(RG1SAV)
 	call ImprimeRegMode
 	call CHGET
 Fim:
@@ -56,14 +62,18 @@ WR2VDPREG:
 	; A = Register number (0-31)
 	; B = Data to write
 	push af
+	push bc
 	call ReadVDPPorts
 	ld	a,(VDPCONTROL)	; A = First writing port used to access the internal VDP
+	call ImprimeBinario
+	call NovaLinha
+	call NovaLinha
 	ld	c,a
-	;inc	c			; C = CPU port connected to the VDP writing port #1
 	di					; Interrupts must be disabled here
 	pop	af
-	out	(c),a			; Write the data
-	out	(c),b			; Write the register number (with the bit 7 always set)
+	pop bc
+	out	(c),b			; Write the data
+	out	(c),a			; Write the register number (with the bit 7 always set)
 	ei					; Interrupts can be enabled here
 ret
 
