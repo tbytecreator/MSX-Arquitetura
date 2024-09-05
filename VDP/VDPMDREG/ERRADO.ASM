@@ -1,5 +1,5 @@
 ; =====================================
-; LEITURA DO REG DE STATUS DO VDP
+; DEMO REGISTRADPRES DE MODO
 ; =====================================
 include "HWD\BIOS.ASM"
 include "HWD\CONST.ASM"

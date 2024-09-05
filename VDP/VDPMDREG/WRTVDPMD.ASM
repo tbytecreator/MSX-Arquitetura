@@ -1,5 +1,5 @@
 ; =====================================
-; LEITURA DO REG DE STATUS DO VDP
+; DEMO REGISTRADPRES DE MODO DO VDP
 ; =====================================
 include "HWD\BIOS.ASM"
 include "HWD\CONST.ASM"
@@ -27,24 +27,6 @@ ImprimeRegMode:
 	call ImprimeBinario
 	call NovaLinha
 	ld a,(RG1SAV)
-	call ImprimeBinario
-	call NovaLinha
-	ld a,(RG2SAV)
-	call ImprimeBinario
-	call NovaLinha
-	ld a,(RG3SAV)
-	call ImprimeBinario
-	call NovaLinha
-	ld a,(RG4SAV)
-	call ImprimeBinario
-	call NovaLinha
-	ld a,(RG5SAV)
-	call ImprimeBinario
-	call NovaLinha
-	ld a,(RG6SAV)
-	call ImprimeBinario
-	call NovaLinha
-	ld a,(RG7SAV)
 	call ImprimeBinario
 	call NovaLinha
 ret
