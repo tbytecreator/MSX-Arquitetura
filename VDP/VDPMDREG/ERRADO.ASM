@@ -11,10 +11,11 @@ org romArea
 	db 00,00,00,00,00
 
 ProgramStart:
-	call LimparTela
-	call ImprimeRegMode
-	call NovaLinha
-	call CHGET
+	call ReadVDPPorts	; lemos as portas do VDP
+	call LimparTela		; limpamos a tela
+	call ImprimeRegMode	; imprimimos os regs de modo
+	call NovaLinha		; pulamos uma linha	
+	call CHGET			; esperamos um tecla
 	; ==================================================
 	; PARA MUDAR A SCREEN, PRECISAMOS 
 	; MUDAR OS REGS 0 E 1 DO VDP
@@ -42,15 +43,15 @@ ProgramStart:
 	; ==================================================
 	; PARA ISSO, USAMOS O COMANDO WRITE VDP
 	; ==================================================
-	ld a,(RG1SAV)
-	set 4,a
-	ld b,a
-	call ImprimeBinario
-	call NovaLinha
-	call CHGET
-	call NovaLinha
-	ld a,129
-	call WR2VDPREG
+	ld a,(RG1SAV)		; lemos o valor do reg de modo 1
+	set 4,a				; setamos o bit 4
+	ld b,a				; salvamos o valor
+	call ImprimeBinario ; imprimimos o valor
+	call NovaLinha		; pulamos uma linha
+	call CHGET			; esperamos um tecla
+	call NovaLinha		; pulamos uma linha
+	ld a,129			; carregamos o valor com 10000001
+	call WR2VDPREG		; escrevemos o valor no VDP
 	ld a,(RG1SAV)
 	call ImprimeRegMode
 	call CHGET
@@ -62,19 +63,15 @@ WR2VDPREG:
 	; A = Register number (0-31)
 	; B = Data to write
 	push af
-	push bc
-	call ReadVDPPorts
-	ld	a,(VDPCONTROL)	; A = First writing port used to access the internal VDP
-	call ImprimeBinario
-	call NovaLinha
-	call NovaLinha
-	ld	c,a
-	di					; Interrupts must be disabled here
-	pop	af
-	pop bc
-	out	(c),b			; Write the data
-	out	(c),a			; Write the register number (with the bit 7 always set)
-	ei					; Interrupts can be enabled here
+	  	ld a,(VDPCONTROL)	
+		ld c,a
+		call ImprimeBinario
+		call CHGET
+	pop af
+	di					; desabilitamos as interrupções
+		out	(c),b		; escrevemos o dado
+		out	(c),a		; escrevemos o registrador com o bit 7 setado
+	ei					; reativamos as interrupções
 ret
 
 ImprimeRegMode:

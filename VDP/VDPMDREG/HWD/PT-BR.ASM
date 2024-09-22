@@ -2,10 +2,10 @@
 ; Strings em PT-BR
 ; =======================================================================
 Message0:
-  db "Leitor de portas do VDP",13
+  db "Screen 0",13
 Message1:
-  db "----------------------------",13
+  db "Screen 1",13
 Message2:
-  db "Porta de leitura=>",13
+  db "Screen 2",13
 Message3:
-  db "Porta de comando=>",13
+  db "Screen 3",13

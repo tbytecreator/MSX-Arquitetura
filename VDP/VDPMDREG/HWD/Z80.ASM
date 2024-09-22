@@ -36,6 +36,22 @@ NovaLinha:
 ret
 
 ; =============================================================================
+; Imprime uma Nova linha na tela grafica
+; =============================================================================
+; Nao usa parametros
+; =============================================================================
+; Altera => Nada
+; =============================================================================
+NovaLinhaSC2:
+	push af
+		ld a, 13
+		call GRPPRT
+		ld a, 10
+		call GRPPRT
+	pop af
+ret
+
+; =============================================================================
 ; Imprime uma string terminada em ENTER(13)
 ; =============================================================================
 ; HL => Endereco da string
@@ -50,6 +66,23 @@ ImprimeString:
 	inc hl
 	jp ImprimeString
 EndString:
+ret
+
+; =============================================================================
+; Imprime uma string na tela grafica
+; =============================================================================
+; HL => Endereco da string
+; =============================================================================
+; Altera => A,HL
+; =============================================================================
+ImprimeStringSC2:
+	ld a,(hl)
+	cp 13
+	jp z,EndStringSC2
+	call GRPPRT
+	inc hl
+	jp ImprimeStringSC2
+EndStringSC2:
 ret
 
 ; =============================================================================
@@ -113,11 +146,38 @@ ImprimeUnidades:
 ret
 
 ; =============================================================================
+; Imprime um Numero binário na tela grafica
+; =============================================================================
+; A => Numero a ser impresso (8 bits, 255)
+; =============================================================================
+; Altera => Carry Flag, A, B
+; =============================================================================
+ImprimeBinarioSC2:
+	; checa cada bit do acumulador, se for 1 imprime 1, se for 0 imprime 0
+	ld b,8
+ProximoBitSC2:
+	rla
+	jr nc,ImprimeZeroSC2
+	push af
+		ld a,'1'
+		call GRPPRT
+	pop af
+	jp ChecaFimSC2
+ImprimeZeroSC2:
+	push af
+		ld a,'0'
+		call GRPPRT
+	pop af
+ChecaFimSC2:
+	djnz ProximoBitSC2
+ret
+
+; =============================================================================
 ; Imprime um Numero binário
 ; =============================================================================
 ; A => Numero a ser impresso (8 bits, 255)
 ; =============================================================================
-; Altera => A,HL,D
+; Altera => Carry Flag, A, B
 ; =============================================================================
 ImprimeBinario:
 	; checa cada bit do acumulador, se for 1 imprime 1, se for 0 imprime 0
