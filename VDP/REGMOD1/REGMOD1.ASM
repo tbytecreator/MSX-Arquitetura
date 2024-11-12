@@ -10,7 +10,7 @@ include "HWD\VAR.ASM"
 ; =====================================
 ; 4/16k	Blank IE	M1 M2 0 Size Mag
 ; =====================================
-; Mag:   1=ampliado;2=normal
+; Mag:   1=ampliado;0=normal
 ; Size:  0=8x8;1=16x16 
 ; M1:    Visto na ultima aula
 ; M2:    Visto na ultima aula
@@ -28,8 +28,9 @@ Inicio:
 SetScreen2_16x16:
 	call INIGRP             ; inicia modo grafico 256x192
 	ld a,(RG1SAV)           ; leio o valor do registro 1
-	and 0xE6                ; também desligo o zoom dos sprites
-	or 2                    ; e ajusto os sprites para 16x16
+	and 0xE6               ; também desligo o zoom dos sprites
+	;or 1 				    ; ligo o bit de magnificacao
+	or 0x82                 ; e ajusto os sprites para 16x16 (2 para 4k)
 	ld b,a					; carrego o novo valor para o registrador
 	ld c,1					; indico o registrador que vou alterar
 	call WRTVDP             ; altero o valor do registrador 1
