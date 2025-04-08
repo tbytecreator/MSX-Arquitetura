@@ -16,9 +16,9 @@ Screen1:
 	call SC1LOADPATTERN ; carrega a tabela de padrões
 	ld a,65				; vamos escrever o caractere 'A'
 	ld b,0				; zera MSB
-	ld c,5 			; na coluna 15
+	ld c,0 				; na coluna 15
 	ld d,0				; zera MSB 
-	ld e,20	        	; na linha 12	
+	ld e,23         	; na linha 12	
 	CALL SC1LOCATE		; rotina para posicionar o cursor
 EndLoop:	
 	di

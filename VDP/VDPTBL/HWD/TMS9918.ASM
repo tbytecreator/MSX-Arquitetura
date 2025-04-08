@@ -37,32 +37,34 @@ SC0PATTERNTBL:	        equ &0800
 ; =============================================================================
 ; VDP MODO HIBRIDO 32X24 (SCREEN 1)
 ; =============================================================================
-; Pattern Table         => 0000H to 07FFH => 2 KB
-; Name Table	        => 1800H to 1AFFH => 768 Bytes
-; Color Table           => 2000H to 37FFH => 6KB
-; Sprite Pattern Table  => 3800H  
+; Pattern Table             => 0000H to 05FFH => 2 KB
+; Name Table	            => 1800H to 1AFFH => 768 Bytes
+; Sprite Attributes Table   => 1B00H to 1B7FH => 128 Bytes
+; Color Table               => 2000H to 201FH => 32 Bytes
+; Sprite Pattern Table      => 3800H to 03FFH => 2 KB 
 ; =============================================================================
 SC1PATTERNTBL:	        equ &0000
 SC1NAMETBL:		        equ &1800
+SC1SPRATTTBL:           equ &1B00
 SC1COLORTBL:	        equ &2000
 SC1SPRITEPATTERNTBL:    equ &3800
 
 ; =============================================================================
 ; SC0LOADPATTERN 
-; Load pattern table into VDP memory
+; carrega a tabela de padroes na memoria do VDP (SCR 0)
 ; =============================================================================	
-; Input Parameters:	
+; Entrada:	
 ;	None
-; Output Parameters:
+; Saida:
 ;	None
-; Alters:
-;	Nothing
+; Altera:
+;	de, hl, bc
 ; =============================================================================
 SC0LOADPATTERN:			
-	ld de,SC0PATTERNTBL	; DE to the address of the pattern table in VDP memory
-	ld hl,FONT			; address of the pattern table into HL			
-	ld bc,208 			; BC to the size of the pattern table (2 KB MAX)
-	call LDIRVM     	; Copy data from DE to HL, incrementing both 
+	ld de,SC0PATTERNTBL	; endereco de carga na memoria do VDP
+	ld hl,FONT			; endereco dos bytes a serem carregados			
+	ld bc,208 			; quantos bytes vamos carregar (maximo 2 KB)
+	call LDIRVM     	; comando que faz a copia do bloco de memoria 
 ret                  
 ; =============================================================================
 
@@ -70,18 +72,18 @@ ret
 ; SC1LOADPATTERN 
 ; Load pattern table into VDP memory
 ; =============================================================================	
-; Input Parameters:	
+; Entrada:	
 ;	None
-; Output Parameters:
+; Saida:
 ;	None
-; Alters:
-;	Nothing
+; Altera:
+;	de, hl, bc
 ; =============================================================================
 SC1LOADPATTERN:			
-	ld de,SC1PATTERNTBL	; DE to the address of the pattern table in VDP memory
-	ld hl,FONT			; address of the pattern table into HL			
-	ld bc,208 			; BC to the size of the pattern table (2 KB MAX)
-	call LDIRVM     	; Copy data from DE to HL, incrementing both 
+	ld de,SC1PATTERNTBL	; endereco de carga na memoria do VDP
+	ld hl,FONT			; endereco dos bytes a serem carregados			
+	ld bc,208 			; quantos bytes vamos carregar (maximo 2 KB)
+	call LDIRVM     	; comando que faz a copia do bloco de memoria
 ret                  
 ; =============================================================================
 
@@ -94,10 +96,9 @@ ret
 ;   E => linha (0 a 23)
 ; =============================================================================
 ; Altera:
-;   A, HL
+;   HL
 ; =============================================================================
 SC1LOCATE:
-    ld (Caractere),a
 CalculaPosVRAM:
     ld h,0 
     ld l,0
@@ -114,7 +115,7 @@ MultiplyHLBy32:
     sla l                   ; Desloca L novamente (5º deslocamento)
     rl h                    ; Propaga o carry para H
 Adicoes:
-    ld de,SC1NAMETBL        ; Carrega o caractere a ser escrito
+    ld de,SC1NAMETBL        ; Carrega o endereco base da tabela de nomes da sc1
     add hl,de               ; Adiciona o endereço base
     add hl,bc               ; Adiciona a coluna            	
     call WRTVRM          	; Escreve o caractere no endereço calculado
