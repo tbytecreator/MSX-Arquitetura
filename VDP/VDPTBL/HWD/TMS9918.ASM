@@ -80,7 +80,19 @@ ret
 ;	de, hl, bc
 ; =============================================================================
 SC1LOADPATTERN:			
-	ld de,SC1PATTERNTBL	; endereco de carga na memoria do VDP
+	ld hl,SC1PATTERNTBL	; endereco de carga na memoria do VDP
+    ld b,0
+    ld c,'A'			; caractere a ser escrito
+MultiplicaPor8:    
+    sla c			    ; desloca 1 bit a esquerda
+    rl b                ; Propaga o carry para o byte mais significativo
+    sla c      		    ; desloca 1 bit a esquerda
+    rl b                ; Propaga o carry para o byte mais significativo
+    sla c       		; desloca 1 bit a esquerda
+    rl b                ; Propaga o carry para o byte mais significativo
+    add hl,bc		    ; adiciona o valor de A na tabela de padroes
+    ld d,h
+    ld e,l	            ; endereco de carga na memoria do VDP
 	ld hl,FONT			; endereco dos bytes a serem carregados			
 	ld bc,208 			; quantos bytes vamos carregar (maximo 2 KB)
 	call LDIRVM     	; comando que faz a copia do bloco de memoria
