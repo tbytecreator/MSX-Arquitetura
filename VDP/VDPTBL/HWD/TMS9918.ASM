@@ -100,6 +100,27 @@ ret
 ; =============================================================================
 
 ; =============================================================================
+; SC1LOADCOLOR 
+; Load color table into VDP memory
+; =============================================================================	
+; Entrada:	
+;	None
+; Saida:
+;	None
+; Altera:
+;	de, hl, bc
+; =============================================================================
+SC1LOADCOLOR:			
+    ld hl,SC1COLORTBL	; endereco de carga na memoria do VDP
+    ld d,h
+    ld e,l	            
+    ld hl,COLOR		    ; endereco dos bytes a serem carregados
+    ld bc,32 		    ; quantos bytes vamos carregar (maximo 32 bytes)
+	call LDIRVM     	; comando que faz a copia do bloco de memoria
+ret                  
+; =============================================================================
+
+; =============================================================================
 ; POSICIONAR CURSOR NA SCREEN 1
 ; =============================================================================
 ; Entrada:

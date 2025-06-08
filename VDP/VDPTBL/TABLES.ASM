@@ -14,12 +14,14 @@ ProgramStart:
 Screen1:
 	call INIT32     	; entra na screen 1
 	call SC1LOADPATTERN ; carrega a tabela de padrões
+	call SC1LOADCOLOR	; carrega a tabela de cores
 	ld a,65				; vamos escrever o caractere 'A'
 	ld b,0				; zera MSB
-	ld c,0 				; na coluna 15
+	ld c,15 			; na coluna 15
 	ld d,0				; zera MSB 
-	ld e,23         	; na linha 12	
-	CALL SC1LOCATE		; rotina para posicionar o cursor
+	ld e,12         	; na linha 12	
+	call SC1LOCATE		; rotina para posicionar o cursor
+	
 EndLoop:	
 	di
 	halt 
@@ -31,6 +33,7 @@ include "HWD\Z80.ASM"
 include "HWD\PT-BR.ASM"
 include "HWD\TMS9918.ASM"
 include "AST\FONT.ASM"
+include "AST\COLOR.ASM"
 
 ; =====================================
 ; PADDING
