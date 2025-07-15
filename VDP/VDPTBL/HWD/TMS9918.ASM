@@ -121,6 +121,27 @@ ret
 ; =============================================================================
 
 ; =============================================================================
+; SC1LOADSPRITEPATTERN 
+; Load sprite pattern table into VDP memory
+; =============================================================================	
+; Entrada:	
+;	None
+; Saida:
+;	None
+; Altera:
+;	de, hl, bc
+; =============================================================================
+SC1LOADSPRITEPATTERN:			
+	ld hl,SC1SPRITEPATTERNTBL   ; endereco de carga na memoria do VDP
+    ld d,h
+    ld e,l	            
+    ld hl,SPRITES		        ; endereco dos bytes a serem carregados
+    ld bc,8		                ; quantos bytes vamos carregar (maximo 2 kbytes)
+	call LDIRVM     	        ; comando que faz a copia do bloco de memoria
+ret                  
+; =============================================================================
+
+; =============================================================================
 ; POSICIONAR CURSOR NA SCREEN 1
 ; =============================================================================
 ; Entrada:
@@ -154,3 +175,32 @@ Adicoes:
     call WRTVRM          	; Escreve o caractere no endereço calculado
 ret
 ; =============================================================================
+
+; =============================================================================
+; PUTSPRITESC1
+; Coloca um sprite cadastrado na tabela de padrões de sprites em uma coordenada
+; =============================================================================
+; Entrada:
+;   A = índice do sprite (0-31)
+;   B = padrão do sprite (0-255)
+;   C = cor do sprite (0-15)
+;   D = coordenada X (0-255)
+;   E = coordenada Y (0-191)
+; =============================================================================
+; Altera:
+;   HL
+; =============================================================================
+PUTSPRITESC1:
+    ld hl,SC1SPRATTTBL      ; Calcula o endereço de VRAM para o sprite
+    ld a,e
+    call WRTVRM             ; Escreve a coordenada Y no VRAM
+    inc hl                  ; Incrementa HL para o próximo byte
+    ld a,d
+    call WRTVRM             ; Escreve a coordenada X no VRAM
+    inc hl                  ; Incrementa HL para o próximo byte
+    ld a,b              
+    call WRTVRM             ; Escreve o padrão do sprite no VRAM
+    inc hl                  ; Incrementa HL para o próximo byte
+    ld a,c                  
+    call WRTVRM             ; Escreve a cor do sprite no VRAM
+ret

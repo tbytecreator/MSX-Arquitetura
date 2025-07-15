@@ -87,6 +87,7 @@ RDVDP:		equ 0x013E			; Lê registrador de status do VDP
 SNSMAT:		equ 0x0141			; Lê linha da matriz de teclado
 KILBUF:		equ 0x0156			; Limpa buffer do teclado
 CALBAS:		equ 0x0159			; Chama rotina BASIC a partir de qualquer slot
+NWRVRM:     equ 0x0177          ; Escreve byte na VRAM 
 ;=============================================================================
 ; MSX1-BIOS SYSTEM VARIABLES
 ;=============================================================================
