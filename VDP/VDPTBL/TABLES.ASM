@@ -1,9 +1,9 @@
 ; =====================================
 ; TABELAS DO VDP MSX 1
 ; =====================================
-include "HWD\BIOS.ASM"
-include "HWD\CONST.ASM"
-include "HWD\VAR.ASM"
+include "HWD/BIOS.ASM"
+include "HWD/CONST.ASM"
+include "HWD/VAR.ASM"
 
 org romArea
 	db "AB"
@@ -47,12 +47,12 @@ EndProgram:
 ; =====================================
 ; FIM PROGRAMA
 ; =====================================
-include "HWD\Z80.ASM"
-include "HWD\PT-BR.ASM"
-include "HWD\TMS9918.ASM"
-include "AST\FONT.ASM"
-include "AST\COLOR.ASM"
-include "AST\SPRITES.ASM"
+include "HWD/Z80.ASM"
+include "HWD/PT-BR.ASM"
+include "HWD/TMS9918.ASM"
+include "AST/FONT.ASM"
+include "AST/COLOR.ASM"
+include "AST/SPRITES.ASM"
 
 ; =====================================
 ; PADDING
