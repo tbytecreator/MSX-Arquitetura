@@ -32,10 +32,10 @@ loop:
 	ld d,16
 	ld e,13						; 
 	call PUTSPRITESC1			; coloca o sprite na tela
-	ld d,17
+	ld d,24
 	ld e,14						; 
 	call PUTSPRITESC1			; coloca o sprite na tela
-	ld d,18
+	ld d,26
 	ld e,15						
 	call PUTSPRITESC1			; coloca o sprite na tela
 	jp loop						; loop infinito
