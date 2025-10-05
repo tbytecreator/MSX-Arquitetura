@@ -181,7 +181,7 @@ ret
 ; Coloca um sprite cadastrado na tabela de padrões de sprites em uma coordenada
 ; =============================================================================
 ; Entrada:
-;   A = índice do sprite (0-31)
+;   A = camada do sprite (0-31)
 ;   B = padrão do sprite (0-255)
 ;   C = cor do sprite (0-15)
 ;   D = coordenada X (0-255)
@@ -191,7 +191,7 @@ ret
 ;   HL
 ; =============================================================================
 PUTSPRITESC1:
-    ld hl,SC1SPRATTTBL      ; Calcula o endereço de VRAM para o sprite
+    ld hl,SC1SPRATTTBL      
     ld a,e
     call WRTVRM             ; Escreve a coordenada Y no VRAM
     inc hl                  ; Incrementa HL para o próximo byte
