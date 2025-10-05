@@ -25,7 +25,7 @@ Init:
 SpriteLoop:
 	call PUTSPRITESC1 	; desenha sprite na posição (d,e)
 	push af
-		ld a,d		   	; salva o indice do sprite
+		ld a,d		   	; salva a coordena x
 		add a,16        ; próximo X = X + 16
 		ld d,a			; salva proximo X
 	pop af

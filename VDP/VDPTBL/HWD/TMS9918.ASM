@@ -191,16 +191,25 @@ ret
 ;   HL
 ; =============================================================================
 PUTSPRITESC1:
-    ld hl,SC1SPRATTTBL      
-    ld a,e
-    call WRTVRM             ; Escreve a coordenada Y no VRAM
-    inc hl                  ; Incrementa HL para o próximo byte
-    ld a,d
-    call WRTVRM             ; Escreve a coordenada X no VRAM
-    inc hl                  ; Incrementa HL para o próximo byte
-    ld a,b              
-    call WRTVRM             ; Escreve o padrão do sprite no VRAM
-    inc hl                  ; Incrementa HL para o próximo byte
-    ld a,c                  
-    call WRTVRM             ; Escreve a cor do sprite no VRAM
+    push af
+        push de 
+            sla a               ; Multiplica A por 2
+            sla a               ; Multiplica A por 2 novamente (total x4)
+            ld d,0
+            ld e,a              ; DE = A * 4
+            ld hl,SC1SPRATTTBL  ; Endereço base da tabela de atributos dos sprites
+            add hl,de           ; Calcula o endereço do sprite na tabela de atributos
+        pop de
+        ld a,e
+        call WRTVRM             ; Escreve a coordenada Y no VRAM
+        inc hl                  ; Incrementa HL para o próximo byte
+        ld a,d
+        call WRTVRM             ; Escreve a coordenada X no VRAM
+        inc hl                  ; Incrementa HL para o próximo byte
+        ld a,b              
+        call WRTVRM             ; Escreve o padrão do sprite no VRAM
+        inc hl                  ; Incrementa HL para o próximo byte
+        ld a,c                  
+        call WRTVRM             ; Escreve a cor do sprite no VRAM
+    pop af
 ret
