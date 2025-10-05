@@ -30,7 +30,7 @@ SpriteLoop:
 		ld d,a			; salva proximo X
 	pop af
 	inc a
-	cp 7
+	cp 4
 	jp z,EndProgram
 	jp SpriteLoop
 EndProgram:	
