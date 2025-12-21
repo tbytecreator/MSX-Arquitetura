@@ -164,3 +164,21 @@ MultiplicaLoop:
 	jr MultiplicaLoop
 MultiplicaFim:
 ret
+; =============================================================================
+; Pausa de 1 segundo
+; =============================================================================
+; Nao usa parametros
+; =============================================================================
+; Altera => BC
+; =============================================================================
+PausaUmSegundo:
+	push bc
+		ld bc,60        ; 50 frames (PAL) ou ~60 frames (NTSC) ≈ 1 segundo
+PausaLoop:
+		halt            ; Espera pelo interrupt (vsync)
+		dec bc
+		ld a,b
+		or c
+		jr nz,PausaLoop
+	pop bc
+ret

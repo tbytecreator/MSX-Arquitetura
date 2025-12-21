@@ -16,22 +16,20 @@ Screen1:
 	call SC1LOADPATTERN 		; carrega a tabela de padrões
 	call SC1LOADCOLOR			; carrega a tabela de cores
 	call SC1LOADSPRITEPATTERN 	; carrega a tabela de sprites
+
 Init:
 	ld a,0 		  	  	; indice do sprite
 	ld b,0            	; padrao do sprite
 	ld c,3            	; cor do sprite
 	ld d,16           	; posicao inicial X
-	ld e,2           	; posicao Y (fixa para a linha)
+	ld e,2           	; posicao inicial Y 
 SpriteLoop:
 	call PUTSPRITESC1 	; desenha sprite na posição (d,e)
+	inc D
+	inc E
 	push af
-		ld a,d		   	; salva a coordena x
-		add a,16        ; próximo X = X + 16
-		ld d,a			; salva proximo X
+	call PausaUmSegundo
 	pop af
-	inc a
-	cp 4
-	jp z,EndProgram
 	jp SpriteLoop
 EndProgram:	
 	call CHGET					; espera por uma tecla

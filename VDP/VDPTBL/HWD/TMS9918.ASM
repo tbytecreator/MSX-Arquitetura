@@ -201,7 +201,7 @@ PUTSPRITESC1:
             add hl,de           ; Calcula o endereço do sprite na tabela de atributos
         pop de
         ld a,e
-        call WRTVRM             ; Escreve a coordenada Y no VRAM
+        call WRTVRM             ; Escreve a coordenada Y no VRAM  
         inc hl                  ; Incrementa HL para o próximo byte
         ld a,d
         call WRTVRM             ; Escreve a coordenada X no VRAM
