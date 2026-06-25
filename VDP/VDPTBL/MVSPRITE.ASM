@@ -18,13 +18,13 @@ Screen1:
 	call SC1LOADSPRITEPATTERN 	; carrega a tabela de sprites
 
 Init:
-	ld a,0 		  	  	; indice do sprite
-	ld b,0            	; padrao do sprite
-	ld c,3            	; cor do sprite
-	ld d,16           	; posicao inicial X
-	ld e,2           	; posicao inicial Y 
+	ld a,0 		  	  			; indice do sprite
+	ld b,0            			; padrao do sprite
+	ld c,6            			; cor do sprite
+	ld d,16           			; posicao inicial X
+	ld e,2           			; posicao inicial Y 
 SpriteLoop:
-	call PUTSPRITESC1 	; desenha sprite na posição (d,e)
+	call PUTSPRITESC1 			; desenha sprite na posição (d,e)
 	inc D
 	inc E
 	push af
