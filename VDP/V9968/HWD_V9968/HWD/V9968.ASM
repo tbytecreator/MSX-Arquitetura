@@ -394,6 +394,7 @@ V9968_COMMAND_BANKS:
 
 ; =============================================================================
 ; V9968_SETRD / V9968_SETWRT
+; =============================================================================
 ; Define o endereco de leitura ou escrita no banco CPU selecionado.
 ; Entrada: A = bits A17-A16 (0-3); HL = bits A15-A0.
 ; Saida: nenhuma. Altera: AF. Preserva: BC, DE, HL.
@@ -433,6 +434,7 @@ V9968_SETADDR:
 
 ; =============================================================================
 ; V9968_READ / V9968_WRITE
+; =============================================================================
 ; Le ou escreve um byte no endereco previamente selecionado.
 ; Entrada WRITE: A = byte. Saida READ: A = byte. Altera: A.
 ; =============================================================================
@@ -446,6 +448,7 @@ V9968_WRITE:
 
 ; =============================================================================
 ; V9968_READ_BLOCK / V9968_WRITE_BLOCK
+; =============================================================================
 ; Transfere bytes a partir do endereco VRAM previamente selecionado.
 ; Entrada: HL = endereco na RAM; BC = quantidade (0 nao transfere bytes).
 ; Saida: BC = 0; HL aponta apos os dados. Altera: AF, BC, HL.
@@ -481,6 +484,7 @@ V9968_WRITE_BLOCK_LOOP:
 
 ; =============================================================================
 ; V9968_PALETTE_NORMAL / V9968_PALETTE_EXT
+; =============================================================================
 ; Escreve uma entrada da paleta, selecionando-a por R#16.
 ; NORMAL exige EPAL=0 em R#20: A = indice 0-15, D = 0RRR0BBB, E = 00000GGG.
 ; EXT exige EPAL=1 em R#20: A = indice 0-255, D = R, E = G, H = B (0-31).
@@ -509,6 +513,7 @@ V9968_PALETTE_EXT:
 
 ; =============================================================================
 ; V9968_WAIT_COMMAND
+; =============================================================================
 ; Aguarda CE=0 em S#2 antes de iniciar outro comando ou acessar VRAM.
 ; Nao use para aguardar comandos que ainda precisam de dados da CPU:
 ; nesses casos o chamador deve atender TR (S#2 bit 7) durante a execucao.
@@ -523,6 +528,7 @@ V9968_WAIT_COMMAND:
 
 ; =============================================================================
 ; V9968_CHECK
+; =============================================================================
 ; Procura o V9968 primeiro como VDP principal (98h), depois como segundo VDP
 ; (88h). Se ambos estiverem presentes, retorna o principal.
 ; A classificacao e pela porta, nao pela presenca fisica de um cartucho:
