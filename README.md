@@ -12,11 +12,23 @@ Aprenda as chamadas da BIOS do MSX.
 
 Aula relacionada:
 
-https://www.youtube.com/watch?v=INUiFmPgjw8&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=2
+<https://www.youtube.com/watch?v=INUiFmPgjw8&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=2>
 
 ### CAPSLOCK
 
+Aprendendo o uso das portas B e C da PPI.
+
+Aula relacionada:
+
+<https://www.youtube.com/watch?v=m7RobUERZsY&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=5>
+
 ### EXPANDER
+
+Os slots expandidos do MSX.
+
+Aula relacionada:
+
+<https://www.youtube.com/watch?v=R-FxlBxNYJg&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=4>
 
 ### KBRPORTS
 
@@ -26,22 +38,28 @@ https://www.youtube.com/watch?v=INUiFmPgjw8&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUB
 
 Entenda a configuração dos slots do MSX.
 
-Aula relacionada:
-
-https://www.youtube.com/watch?v=INUiFmPgjw8&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=2
+Aula relacionada: <https://www.youtube.com/watch?v=MHTIrg2tnSc&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=3>
 
 ## VDP
 
 Codigos para aprendizado do uso do VDP do MSX
 
-### PKVPK
+### V9918
 
-### REGMOD1
+Codigos para aprendizado do VDP do MSX 1
 
-### VDPMDREG
+#### PKVPK
 
-### VDPPORTS
+#### REGMOD1
 
-### VDPSTREG
+#### VDPMDREG
 
-### VDPTBL
+#### VDPPORTS
+
+#### VDPSTREG
+
+#### VDPTBL
+
+### V9968
+
+Códigos para aprendizado do VDP do MSX 2++ do HRA!
