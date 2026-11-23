@@ -60,6 +60,12 @@ Codigos para aprendizado do VDP do MSX 1
 
 #### VDPTBL
 
+Aprendendo sobre as tabelas do VDP V9918
+
+Aula relacionada:
+
+<https://www.youtube.com/watch?v=AtrmpD43kzM&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=21>
+
 ### V9968
 
 Códigos para aprendizado do VDP do MSX 2++ do HRA!
