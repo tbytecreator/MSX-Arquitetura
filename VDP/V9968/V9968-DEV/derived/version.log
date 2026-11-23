@@ -1,0 +1,6 @@
+Extracting revision info...
+Error executing "git describe --dirty"
+fatal: No names found, cannot describe anything.
+Execution failed with exit code 128
+Revision string: None
+Revision number: None

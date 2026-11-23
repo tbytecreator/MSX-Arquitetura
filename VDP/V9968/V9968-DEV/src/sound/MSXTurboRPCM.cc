@@ -1,0 +1,152 @@
+#include "MSXTurboRPCM.hh"
+
+#include "MSXMixer.hh"
+#include "MSXMotherBoard.hh"
+#include "serialize.hh"
+
+#include "narrow.hh"
+#include "unreachable.hh"
+
+namespace openmsx {
+
+MSXTurboRPCM::MSXTurboRPCM(const DeviceConfig& config)
+	: MSXDevice(config)
+	, mixer(getMotherBoard().getMSXMixer())
+	, connector(getPluggingController(), "pcminput")
+	, dac("PCM", "Turbo-R PCM", config)
+	, reference(getCurrentTime())
+{
+	reset(getCurrentTime());
+}
+
+MSXTurboRPCM::~MSXTurboRPCM()
+{
+	hardwareMute(false);
+}
+
+void MSXTurboRPCM::reset(EmuTime time)
+{
+	reference.reset(time);
+	status = 0;
+	DValue = 0x80; // TODO correct initial value?
+	hold = 0x80; // avoid UMR
+	dac.reset(time);
+	hardwareMute(false);
+}
+
+byte MSXTurboRPCM::readIO(uint16_t port, EmuTime time)
+{
+	return peekIO(port, time);
+}
+
+byte MSXTurboRPCM::peekIO(uint16_t port, EmuTime time) const
+{
+	switch (port & 0x01) {
+	case 0:
+		// bit 0-1  15.700kHz counter
+		// bit 2-7  not used
+		return reference.getTicksTill(time) & 0x03;
+	case 1:
+		// bit 0   BUFF  0->D/A    TODO check this bit
+		//               1->A/D
+		// bit 1   MUTE  mute ALL sound  0->muted
+		// bit 2   FILT  filter  0->standard signal
+		//                       1->filtered signal
+		// bit 3   SEL   select 0->D/A
+		//                      1->Mic/Jack
+		// bit 4   SMPL  sample/hold  0->sample
+		//                            1->hold
+		// bit 5-6       not used
+		// bit 7   COMP  comparator result 0->greater
+		//                                 1->smaller
+		return (getComp(time) ? 0x80 : 0x00) | (status & 0x1F);
+	default:
+		UNREACHABLE;
+	}
+}
+
+void MSXTurboRPCM::writeIO(uint16_t port, byte value, EmuTime time)
+{
+	switch (port & 0x01) {
+	case 0:
+		// While playing: sample value
+		//       recording: compare value
+		// Resets counter
+		reference.advance(time);
+		DValue = value;
+		if (status & 0x02) { // not muted
+			assert(reference.getTime() <= time);
+			auto time2 = (status & 0x01) // BUFF
+			           ? reference.getFastAdd(1) // value only updates on the next clock
+			           : time;
+			assert(time <= time2);
+			dac.writeDAC(DValue, time2);
+		}
+		break;
+
+	case 1:
+		// bit 0   BUFF
+		// bit 1   MUTE  mute _all_ sound  0->no sound
+		// bit 2   FILT  filter  1->filter on
+		// bit 3   SEL   select  1->Mic/Jack  0->D/A
+		// bit 4   SMPL  sample/hold  1->hold
+		// bit 5-7  not used
+		byte change = status ^ value;
+		status = value;
+
+		if ((change & 0x01) && ((status & 0x01) == 0)) {
+			dac.writeDAC(DValue, time);
+		}
+		// TODO status & 0x08
+		if ((change & 0x10) && (status & 0x10)) {
+			hold = getSample(time);
+		}
+		hardwareMute(!(status & 0x02));
+		break;
+	}
+}
+
+byte MSXTurboRPCM::getSample(EmuTime time) const
+{
+	return (status & 0x04)
+		? narrow<byte>((connector.readSample(time) / 256) + 0x80)
+		: 0x80; // TODO check
+}
+
+bool MSXTurboRPCM::getComp(EmuTime time) const
+{
+	// TODO also when D/A ??
+	byte sample = (status & 0x10) ? hold : getSample(time);
+	return sample >= DValue;
+}
+
+void MSXTurboRPCM::hardwareMute(bool mute)
+{
+	if (mute == hwMute) return;
+
+	hwMute = mute;
+	if (hwMute) {
+		mixer.mute();
+	} else {
+		mixer.unmute();
+	}
+}
+
+
+template<typename Archive>
+void MSXTurboRPCM::serialize(Archive& ar, unsigned /*version*/)
+{
+	ar.template serializeBase<MSXDevice>(*this);
+	ar.serialize("audioConnector", connector,
+	             "reference",      reference,
+	             "status",         status,
+	             "DValue",         DValue,
+	             "hold",           hold,
+	             "DAC",            dac);
+
+	hardwareMute(!(status & 0x02));  // restore hwMute
+}
+INSTANTIATE_SERIALIZE_METHODS(MSXTurboRPCM);
+REGISTER_MSXDEVICE(MSXTurboRPCM, "TurboR-PCM");
+
+} // namespace openmsx

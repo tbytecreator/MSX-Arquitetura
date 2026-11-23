@@ -1,0 +1,19 @@
+#include "ResampleTrivial.hh"
+
+#include "ResampledSoundDevice.hh"
+
+namespace openmsx {
+
+ResampleTrivial::ResampleTrivial(ResampledSoundDevice& input_)
+	: ResampleAlgo(input_)
+{
+}
+
+bool ResampleTrivial::generateOutputImpl(float* dataOut, size_t num,
+                                         EmuTime /*time*/)
+{
+	getEmuClock() += num;
+	return input.generateInput(dataOut, num);
+}
+
+} // namespace openmsx

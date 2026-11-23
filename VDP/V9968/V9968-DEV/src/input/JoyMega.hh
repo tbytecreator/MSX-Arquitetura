@@ -1,0 +1,82 @@
+#ifndef JOYMEGA_HH
+#define JOYMEGA_HH
+
+#include "JoystickDevice.hh"
+
+#include "BooleanInput.hh"
+#include "MSXEventListener.hh"
+#include "StateChangeListener.hh"
+#include "StringSetting.hh"
+
+#include <array>
+#include <vector>
+
+namespace openmsx {
+
+class CommandController;
+class JoystickManager;
+class MSXEventDistributor;
+class StateChangeDistributor;
+
+class JoyMega final : public JoystickDevice, private MSXEventListener
+                    , private StateChangeListener
+{
+public:
+	JoyMega(CommandController& commandController,
+	        MSXEventDistributor& eventDistributor,
+	        StateChangeDistributor& stateChangeDistributor,
+	        JoystickManager& joystickManager,
+	        uint8_t id);
+	~JoyMega() override ;
+
+	[[nodiscard]] static TclObject getDefaultConfig(JoystickId joyId, const JoystickManager& joystickManager);
+
+	template<typename Archive>
+	void serialize(Archive& ar, unsigned version);
+
+private:
+	void checkJoystickConfig(const TclObject& newValue);
+
+	// Pluggable
+	[[nodiscard]] zstring_view getName() const override;
+	[[nodiscard]] zstring_view getDescription() const override;
+	void plugHelper(Connector& connector, EmuTime time) override;
+	void unplugHelper(EmuTime time) override;
+
+	// JoystickDevice
+	[[nodiscard]] uint8_t read(EmuTime time) override;
+	void write(uint8_t value, EmuTime time) override;
+
+	// MSXEventListener
+	void signalMSXEvent(const Event& event,
+	                    EmuTime time) noexcept override;
+	// StateChangeListener
+	void signalStateChange(const StateChange& event) override;
+	void stopReplay(EmuTime time) noexcept override;
+
+	void plugHelper2();
+	void checkTime(EmuTime time);
+
+private:
+	CommandController& commandController;
+	MSXEventDistributor& eventDistributor;
+	StateChangeDistributor& stateChangeDistributor;
+	JoystickManager& joystickManager;
+	StringSetting configSetting;
+
+	// 0...3 :  up, down, left, right
+	// 4...7 :  a, b, c, start
+	// 8..11 :  x, y, z, select
+	std::array<std::vector<BooleanInput>, 12> bindings; // calculated from 'configSetting'
+
+	const std::string description;
+	EmuTime lastTime = EmuTime::zero();
+	unsigned status = 0xfff;
+	uint8_t cycle; // 0-7
+	uint8_t cycleMask; // 1 or 7
+	const uint8_t id;
+};
+
+} // namespace openmsx
+
+#endif

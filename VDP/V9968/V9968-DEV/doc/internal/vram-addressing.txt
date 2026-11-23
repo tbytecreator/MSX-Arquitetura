@@ -1,0 +1,365 @@
+VRAM Addressing
+===============
+
+This document describes a model for the way the V9938 VDP calculates
+addresses in VRAM using base registers and indices.
+
+General Formula
+---------------
+
+General formula for VRAM addressing:
+  vram_address = index1 & mask
+where:
+  vram_address is the index in VRAM
+  index1 is the index in the particular table, such as the name table or
+    color table. The unused bits of index are all ones.
+  mask is the value in the table's base register. The unused bits of mask
+    are all ones.
+
+Examples:
+
+The name table base register is VDP R#2.
+It contains A16-A10 of the mask, the other bits are 1.
+If R#2 would contain 24h, the mask would be:
+  (24h << 10) | ~(-1 << 10) = 093FFh
+
+In SCREEN1 (Graphic 1) there are usually 24 lines of 32 characters each.
+However, the actual screen height is 32 lines, as can be seen when the
+vertical adjust register R#23 is used. So the number of characters per
+screen is 32*32 = 1024 = 2^10. With one byte per character, the index is
+10 bits wide.
+
+If the index would be 157h, this is extended with leading ones for A10 and
+higher (1FC00h) to become 1FD57h. Then the final address is:
+  vram_address = 1FD57h & 093FFh = 09157h
+
+Note that in this case, the final address is equal to:
+  R#2 * 2^10 + index = 09000h + 157h = 09157h
+This is true for all display modes in which the used bits in the base
+register (A16..A10 in this case) do not overlap the bits in the index
+(A9..A0 in this case). This is also the way application programmers
+typically use the table base address registers.
+
+In SCREEN5 (Graphic 4) there are 256 lines of 128 bytes each. Only 212 lines
+are visible at a time, but using the vertical adjust register R#23 all 256
+lines can be seen. A line is 256 pixels wide, with 4 bits per pixel that
+makes 128 bytes per line. So the total number of bytes per screen is
+256 * 128 = 32768 = 2^15. Therefore the index is 15 bits wide.
+
+If the index would be 4521h, this is extended with leading ones for A16 and
+A15 (18000h) to become 1C521h. Using the same mask as before (093FFh), the
+final address is:
+  vram_address = 1C521h & 093FFh = 08121h
+
+Note that in this case, the final address is NOT equal to:
+  R#2 * 2^10 + index = 09000h + 4521h = 0D521h
+The VDP data book states that in SCREEN5 bit4 to bit0 should be 1, in those
+cases the general formula is equivalent to addition. But when some of those
+bits are zeroes, the general formula gives the same result the real VDP
+does, while addition does not. The many-scrollers part of Anma's "Source of
+Power" demo uses this feature to display the same scrolling text many times
+on the same screen.
+
+Range Checking
+--------------
+
+Different VDP subsystems are interested in different tables. For example,
+the sprite subsystem is only interested in the sprite name and pattern
+tables. On reads and writes to tables, interested subsystems must be
+informed so they can update their internal state. Therefore an algorithm is
+needed which calculates in which tables (if any) a given address is located.
+
+Here is the address calculation formula again:
+  vram_address = index1 & mask
+The lowest address within the range is when the index is 0, index1 then
+contains only ones in unused bits. The highest address (inclusive) is when
+the index is all ones, then index1 is also all ones and the address is equal
+to the mask. However, not all addresses between the lowest and the highest
+address actually occur if the mask has one or more zeroes in the bits that
+overlap with the index.
+
+Let "inside : Int -> Bool" be the function that tells whether an address is
+inside a table:
+  inside.addr = (Exist i : i in Indices : i & mask = addr)
+In English: there is an index i, for which the VRAM address is addr.
+
+A convenient formula for the inside function is this one:
+  inside.addr =
+    addr & (~mask | (-1 << index_width)) = mask & (-1 << index_width)
+Note that "addr" only occurs once and all other values are constant for each
+display mode, so the check takes two operations (one compare and one AND).
+This is probably the cheapest you can get.
+
+Index Width
+-----------
+
+Which address bits are stored in the table base address registers is
+documented in the VDP data book, but which address bits are produced by the
+index is not documented there. This section fills that gap.
+
+- Name Table -
+
+Name table base address is [A16..A10] (R#2).
+
+Display mode:   Index width in bits:
+   Text 1         12 (*1)
+   Text 2         12
+ Multicolor       10 (*2)
+  Graphic 1       10 (*2)
+  Graphic 2       10 (*2)
+  Graphic 3       10 (*2)
+  Graphic 4       15
+  Graphic 5       15
+  Graphic 6       15 + plane (*3)
+  Graphic 7       15 + plane (*3)
+(*1) Text 1 index is calculated as 00C00h + position.
+     On MSX1 it was 10 bits wide. For some reason, unifying address
+     calculation with Text 2 must have been simpler than keeping it 10 bits
+     wide, even though unification requires an add operation.
+(*2) Maybe this is 12 bits and index = 00C00h + position just like Text 1.
+     That's equivalent to 10 bits though, because there are 1024 characters
+     per screen.
+(*3) See "Planar Addressing" section for details.
+
+- Pattern Table -
+
+Pattern table base address is [A16..A11] (R#4).
+
+Display mode:   Index width in bits:
+   Text 1         11
+   Text 2         11
+ Multicolor       11
+  Graphic 1       11
+  Graphic 2       13
+  Graphic 3       13
+  Graphic 4       -
+  Graphic 5       -
+  Graphic 6       -
+  Graphic 7       -
+
+- Color Table -
+
+Color table base address is [A16..A6] (R#3 and R#10).
+
+Display mode:   Index width in bits:
+   Text 1         -
+   Text 2         9
+ Multicolor       -
+  Graphic 1       6 (*1)
+  Graphic 2       13
+  Graphic 3       13
+  Graphic 4       -
+  Graphic 5       -
+  Graphic 6       -
+  Graphic 7       -
+(*1) Bit5 is fixed to zero.
+
+- Sprite Attribute Table -
+
+Sprite mode:    Index width in bits:
+   mode 1         7
+   mode 2         10 (*1)
+(*1) Bit9 selects sprite color table (0) or sprite attribute table (1).
+     Bit8 and Bit7 are fixed to zero for the attribute table.
+
+- Sprite Pattern Table -
+
+Sprite mode:    Index width in bits:
+   mode 1         11
+   mode 2         11
+
+Index Calculation
+-----------------
+
+The following variables occur in every display mode:
+  org_line: display line,
+            0 <= org_line < 256
+  line:     org_line after scroll adjustment (R#23 is applied),
+            0 <= line < 256
+  name:     value in VRAM at address (name_index & name_mask),
+            0 <= name < 256
+
+The "/" operation is integer division ("div").
+The "%" operation is modulo/remainder ("mod").
+
+- Text 1 -
+
+Aka SCREEN0, WIDTH40.
+0 <= x < 40
+y = org_line / 8
+name_index = 00C00h + y * 40 + x
+pattern_index = name * 8 + line % 8
+
+Adding 00C00h was probably done to make the index 12 bits wide, just like
+in Text 2 mode. You can see this addition in action if you enable 212 lines
+display and then play with different values of R#2. Pay attention to the
+characters displayed in the lower few lines of the screen.
+
+- Text 2 -
+
+Aka SCREEN0, WIDTH80.
+0 <= x < 80
+y = org_line / 8
+name_index = y * 80 + x
+pattern_index = name * 8 + line % 8
+
+- Multicolor -
+
+Aka SCREEN3.
+0 <= x < 32
+y = line / 8
+name_index = y * 32 + x
+pattern_index = name * 8 + line % 4
+
+- Graphic 1 -
+
+Aka SCREEN1.
+0 <= x < 32
+y = line / 8
+name_index = y * 32 + x
+pattern_index = name * 8 + line % 8
+color_index = name / 8
+
+- Graphic 2 and 3 -
+
+These modes are equivalent, except for the sprite mode.
+Aka SCREEN2 and SCREEN4.
+0 <= x < 32
+y = line / 8
+name_index = y * 32 + x
+pattern_index = ((line / 64) * 256 + name) * 8 + line % 8
+color_index = ((line / 64) * 256 + name) * 8 + line % 8
+
+- Graphic 4 -
+
+0 <= x < 256
+name_index = line * 128 + x / 2
+
+- Graphic 5 -
+
+0 <= x < 512
+name_index = line * 128 + x / 4
+
+- Graphic 6 -
+
+0 <= x < 512
+name_index = line * 128 + x / 4
+plane = (x / 2) % 2
+
+- Graphic 7 -
+
+0 <= x < 256
+name_index = line * 128 + x / 2
+plane = x % 2
+
+- Sprite Mode 1 -
+
+0 <= sprite_nr < 32
+attrib_index = sprite_nr * 4
+
+0 <= pattern_nr < 256
+pattern_index = pattern_nr * 8
+
+When sprite size is 16x16, Bit1 and Bit0 of the index are ignored.
+Four patterns define the look of a single sprite, like this:
+ 0 2
+ 1 3
+
+- Sprite Mode 2 -
+
+0 <= sprite_nr < 32
+attrib_index = 512 + sprite_nr * 4
+color_index = sprite_nr * 16
+
+0 <= pattern_nr < 256
+pattern_index = pattern_nr * 8
+
+When sprite size is 16x16, Bit1 and Bit0 of the index are ignored.
+Four patterns define the look of a single sprite, like this:
+ 0 2
+ 1 3
+
+Planar Addressing
+-----------------
+
+The V9938 has 3 pins that select a group of VRAM ICs each: CAS0, CAS1 and CASX.
+CASX is used to select the expansion RAM, which can be accessed through the CPU
+interface and through commands, but cannot be displayed directly.
+
+Each VRAM group can be 0K, 16K or 64K. A group can consist of 8 chips of 1-bit
+wide RAM or 2 chips of 4-bit wide RAM, but for the purpose of addressing we can
+just pretend it is 1 chip with 8-bit wide RAM.
+
+In real MSX machines, the following group combinations are used:
+
+  CAS0:  CAS1:  CASX:   Description:
+   16K     0K     0K    MSX1 with V9938 and 16K VRAM (*1)
+   64K     0K     0K    MSX2 with 64K VRAM (*2)
+   64K    64K     0K    MSX2 with 128K VRAM
+   64K    64K    64K    MSX2 with 128K VRAM and 64K expansion (*3)
+
+*1: Examples are the Spectravideo SVI-738 X'PRESS and the Yamaha CX5MII/128.
+    The only V9938-specific display mode that they can fully display is
+    80-columns text mode (TEXT2).
+*2: Known 64K VRAM machines: Canon V-25, Hitachi MB-H3, Talent TPP-311 and 312,
+    Toshiba HX-23.
+*3: No known machines shipped with expansion VRAM. It was a popular amateur
+    upgrade for users of FastCopy, to reduce the number of required disk swaps.
+
+In most display modes addressing is linear, meaning the lower 64K of address
+space uses the VRAM connected to CAS0 and the upper 64K of address space uses
+the VRAM connected to CAS1.
+
+In SCREEN7/8 (Graphic 6/7) the addressing is planar, meaning that even VRAM
+addresses are mapped to CAS0 and odd addresses are mapped to CAS1. This means
+that SCREEN 7/8 are only available on 128K VRAM machines. The most likely
+reason for using planar addressing is getting a higher bandwidth: even though
+the data lines are shared between all VRAM groups, the row select has to be
+done only once.
+
+VR=0 / VR=1 mode
+----------------
+
+The VDP chip has 10 pins that are connected to the VRAM subsystem to control
+the read/write address. There are 8 address pins, these select the CAS/RAS
+address. And there is a CAS0 and CAS1 pin, these select one of two ram chip
+(groups). In total this allows for a 17-bit address space (=128kB). (I'm
+ignoring the extended VRAM here).
+
+When the VDP does a memory access, it's puts the 17-bit logical address on
+these pins. The way how this is done depends on the VR bit (bit 3 of register
+8), see table below.
+
+In VR=1 mode, it first puts the bits A15-A8 on the address bus, followed by the
+bits A7-A0. The whole time either pin CAS0 or CAS1 is selected, depending on
+address bit A16. In VR=0 mode, .. well see table ;)
+
+
+  VDP  |         VR=0         |         VR=1         |
+address|----------------------|----------------------|
+  pin  | RAS(high) | CAS(low) | RAS(high) | CAS(low) |
+-------+-----------+----------|-----------+----------|
+  AD0  |     A6  #2|     1  #1|     A8    |    A0    |
+  AD1  |     A7    |    A0    |     A9    |    A1    |
+  AD2  |     A8    |    A1    |    A10    |    A2    |
+  AD3  |     A9    |    A2    |    A11    |    A3    |
+  AD4  |    A10    |    A3    |    A12    |    A4    |
+  AD5  |    A11    |    A4    |    A13    |    A5    |
+  AD6  |    A12    |    A5    |    A14    |    A6    |
+  AD7  |    A13    |    A6  #2|    A15    |    A7    |
+-------+-----------+----------|-----------+----------|
+CAS0/1 |          A14         |          A16         |
+
+#1  this pin is always '1' in the CAS phase
+#2  A6 is output both in CAS and RAS phase, this allows to use both 8/6 and 7/7
+    RAS/CAS configurations (see VDP data sheet for details)
+
+
+One important side-effect is that in VR=0 mode, the VDP can only address 32kB
+memory. This is what makes the demo 'syntax infinity' work even though R14 is
+programmed 'wrongly' (it writes to address 0x1????, but expects the data to end
+up at address 0x0????).
+
+Another side effect is that when switching between VR=0 and VR=1 modes, the
+address space gets shuffled around, much like bit 7 in VDP register 1 for
+TMS99x8 chips.

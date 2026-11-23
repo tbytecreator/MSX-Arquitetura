@@ -1,0 +1,806 @@
+
+
+The test program, in short:
+  Execute the same instruction (or short instruction sequence) number of
+  times and use the E6 timer to measure how long it took.
+
+The E6 timer has a resolution of 255682Hz (3579545Hz / 14). R800 runs at
+7159090Hz (2 * 3579545Hz). So the timer ticks once every 28 R800 ticks.
+
+
+-----------------------------------------------
+
+	org	#c000
+
+start	equ	#0100
+
+	ld	de,start
+	ld	hl,begin
+	ld	bc,begin1-begin
+	ldir
+	push	de
+	ld	hl,loop
+	ld	bc,loop1-loop
+	ldir
+	pop	hl
+	ld	bc,(20000-1)*(loop1-loop) ; number varies depending on
+	ldir                              ; length of the test-sequence
+	ld	hl,end
+	ld	bc,end1-end
+	ldir
+	jp	start
+
+begin	di
+	out	(#e6),a
+begin1
+
+loop	muluw   hl,bc                     ; test sequence
+loop1
+
+end	in	a,(#e6)
+	ld	l,a
+	in	a,(#e7)
+	ld	h,a
+	ei
+	ret
+end1
+
+-----------------------------------------------
+
+
+Below are the results, it's formatted like this
+
+  ----------------------------------------------
+  [ prologue ]
+  instruction-sequence  [ repeat-count ]
+    result: <raw-result>
+    cycles: <cycles>  [ instruction break-down ]
+    notes:
+  ----------------------------------------------
+
+Prologue are extra setup instructions, they are only executed once, only a few
+test have them
+
+Instruction-sequence is the actual instruction that's been tested. Mostly this
+is a single instruction, but sometimes there is a pair of instructions.
+
+repeat-count indicates how many times the instruction-sequence is repeated.
+I tried to repeat the instruction as much as possible. But to fit longer
+instruction sequences (longer in number of opcode bytes) in memory, the
+repeat count is sometimes reduced.
+
+raw-result: this is the value of the E6 timer at the end of the test. Note
+that you cannot directly compare this number to other test because other
+test might have a different repeat-count.
+
+cycles: here I calculated the number of cycles required per
+'instruction-sequence'-iteration. I calculated this by comparing the result
+to the 'nop' instruction (a nop takes 1 cycle). Note that the duration
+of most instructions in almost never exactly an integer multiple of the
+duration of the nop instruction. A possible explanation might be the
+refresh (only happens at the end of an instruction, so for longer instructions
+the chance of a refresh is relatively less). But we need additional test to
+fully explain the refresh behaviour.
+
+Instruction break-down: Here I tried to split the instruction into micro-ops.
+I used the following notation:
+  f  opcode fetch, no page-break, takes 1 cycle
+  r  data read,    no page-break, takes 1 cycle
+  w  data write,   no page-break, takes 1 cycle
+  F  opcode fetch,    page-break, takes 2 cycles
+  R  data read,       page-break, takes 2 cycles
+  W  data write,      page-break, takes 2 cycles
+  x  extra cycle (for various stuff)
+  i  IO
+
+
+---------------------------------------------------------------
+
+
+
+* Instructions that don't do additional bus transactions (read, write, IO).
+
+nop  [x 40000]
+  result:           1629-1645
+  openmsx-rev11643: 1637-1638
+  cycles: 1  [f]
+
+add hl,bc  [x 40000]
+  result:           1633-1645
+  openmsx-rev11643: 1637-1638
+  cycles: 1  [f]
+
+cpl  [x 40000]
+  result:  varies between 1628-1647, most often around 1638
+  openmsx-rev11643: 1637-1638
+  cycles: 1  [f]
+  note: same result for cpl, daa, ccf, scf, exx, ex af,af', ld sp,hl, rrca, ...
+
+neg  [x 20000]
+  result:           1637  (most often 1637, sometimes 1638)
+  openmsx-rev11643: 1643-1645
+  cycles: 2  [ff]
+  note: - measurement on real HW is MUCH more stable for this test compared to
+          previous tests
+        - same result for ld {a,i,r},{a,i,r}
+        - all results below for the real HW probably vary as well, though in
+          my initial tests on the real HW I only noted the most often
+          occuring value. I should re-test, but that's a lot of work.
+
+im 0/1/2  [x 20000]
+  result:           2453-2360, most often 2456
+  openmsx-rev11643: 2459-2460
+  cycles: 2  [ffx]
+
+di  [x 40000]
+  result:           3267
+  openmsx-old:      3267
+  openmsx-rev11643: 3273-3274
+  cycles: 2  [fx]
+  note: I added 'openmsx-old' tags where older openmsx revisions were better
+        (possibly by accident) than the current revision.
+
+ei  [x 40000]   (VDP irq disabled)
+  result:           1435 (!)
+  openmsx-rev11643: 1434-1436
+  cycles: 1  [f]
+  note: This is faster than nop!!
+        Both instructions are one cycle, but it seems there's no refresh delay
+        after a 'ei' instructions. At least with this assumption the theory
+        matches very closely the measurment.... Implemented like this in openMSX
+        and it matches the measurement very well.
+        I verified that 'VDP irq disabled' has no influence on speed: I mean
+        even with VDP irq disabled, the speed of 'nop' is the same as before.
+
+ld a,ixh  [x 20000]
+  result:           1637
+  openmsx-old:      1636
+  openmsx-rev11643: 1643-1545
+  cycles: 2  [ff]
+
+muluw hl,bc  [x 20000]
+  result:           29354
+  openmsx-rev11643: 29360-29361
+  cycles: 36  [ffx34]
+
+mulub a,b  [x 20000]
+  result:           11419
+  openmsx-rev11643: 11425-11427
+  cycles: 14  [ffx12]
+
+
+
+* Instructions that do a single read/write operation
+
+ld (#d000),a  [x 10000]
+  result:           2449
+  openmsx-rev11643: 2446-2447
+  cycles: 6  [FffW]
+  note: page-break when switching from opcode fetching to data writes
+        and again when switching from data write to opcode fetching
+
+ld a,(#d000)  [x 10000]
+  result:           2449
+  openmsx-rev11643: 2445-2447
+  cycles: 6  [FffR]
+  note: same as above but for read
+
+ld a,(#0100) [x 80(!)]
+  result:           20
+  openmsx-rev11643: 20
+  cycles: 6  [FffR]
+  note: opcode fetch and read are in the same 256-byte page,
+        but still there is a page-break when switching from
+        opcode reading to data reading
+
+[ ld hl,#d000 ]
+ld a,(hl)  [x 40000]
+  result:           6522
+  openmsx-rev11643: 6522-6523
+  cycles: 4  [FR]
+
+[ ld hl,#d000 ; ld bc,0 ]
+ld a,(hl) ; add hl,bc  [x 20000]
+  result:           4054
+  openmsx-rev11643: 4054-4055
+  cycles: 3 + 2  [fR F]
+
+[ ld hl,start+XX ; ld bc,2 ]
+ld a,(hl) ; add hl,bc  [x 20000]
+  result:           4055
+  openmsx-rev11643: 4054-4055
+  cycles: 3 + 2  [fR F]
+  note: same test as above, but now the data is in the same page as
+        the instructions. There is still a page-break.
+
+[ ld hl,start+XX ; ld bc,2 ]
+ld (hl),a ; add hl,bc  [x 20000]
+  result:           4054
+  openmsx-rev11643: 4054-4055
+  cycles: 3 + 2  [fW F]
+  note: same as above but for writes
+
+ld r,(ix+o)  [x 10000]
+  result:           2854
+  openmsx-rev11643: 2848-2849
+  cycles: 7  [FffxR]
+  note: between opcode fetching (3 bytes) and read there is one additional
+        cycle to calculate the result of IX+o
+
+ld (ix+o),r  [x 10000]
+  result:           2854
+  openmsx-rev11643: 2848-2849
+  cycles: 7  [FffxW]
+  note: same as above, but for write
+
+ld (ix+o),n  [x 10000]
+  result:           2861
+  openmsx-rev11643: 2848-2849
+  cycles: 7  [FfffW]
+  note: Has the same number of cycles as 'ld (ix+o),r' even though this
+        instruction is one byte longer. The IX+o calculation is done
+        in parallel with fetching the last opcode byte.
+        Z80 shows the same parallelism.
+  note: Even though it has the same number of cycles as 'ld (ix+o),r', it
+        is consistently slightly slower. A possible explanation is that there
+        are page-breaks on opcode fetches in this test, since this instruction
+        has length 4 instead of 3.
+
+bit 0,a  [x 20000]
+  result:           1637
+  openmsx-old:      1636
+  openmsx-rev11643: 1643-1645
+  cycles: 2  [ff]
+
+bit 0,(hl)  [x 20000]
+  result:           4055
+  openmsx-rev11643: 4065-4066
+  cycles: 5  [FfR]
+
+bit 0,(ix+o)  [x 10000]
+  result:           2861
+  openmsx-rev11643: 2848-2849
+  cycles: 7  [FfffR]
+  note: I always found it strange that the format of these instructions is
+           <0xDD> <0xCB> <offset> <function>     (offset before function)
+        But this allows to hide the latency of calculating IX+o. The same
+        happens on a Z80.
+
+
+
+* Instructions that read/write 2 bytes
+
+ld (#d000),hl  [x 10000]
+  result:           2854
+  openmsx-rev11643: 2848-2849
+  cycles: 7  [FffWw]
+  note: no page-break for the second data write
+
+ld (#d0ff),hl  [x 10000]
+  result:           3264
+  openmsx-rev11643: 3260-3262
+  cycles: 8  [FffWW]
+  note: of course here there must be a page-break
+
+ld hl,(#d000)  [x 10000]
+  result:           2854
+  openmsx-rev11643: 2848-2849
+  cycles: 7  [FffRr]
+  note: similar for read
+
+ld hl,(#d0ff)  [x 10000]
+  result:           3264
+  openmsx-rev11643: 3260-3262
+  cycles: 8  [FffRR]
+
+push hl ; pop hl  [x 20000]
+  result:           8956
+  openmsx-old:      8950
+  openmsx-rev11643: 8928-8930
+  cycles: 6 + 5  [FxWw FRr]
+  note: push is once cycle slower than pop, probably because push first has
+        to decrease SP, while pop can directly put the value of SP on the bus
+
+
+
+* Read-modify-write instructions (single byte)
+
+inc a  [x 40000]
+  result:           1628-1642
+  openmsx-rev11643: 1637-1638
+  cycles: 1  [f]
+
+inc (hl)  [x 40000]
+  result:           11393
+  openmsx-rev11643: 11392-11393
+  cycles: 7  [FRxW]
+  note: This instructions is slower than I expected, but it can be explained
+        like this:
+         - there is one cycle between data read and data write to get the
+           time to actually increase the value
+         - when switching from data-read to data-write there is a page-break
+           (even though the address is identical)
+        But see also the 'ex (sp),hl' instruction below
+
+inc (ix+o)  [x 10000]
+  result:           4080
+  openmsx-rev11643: 4076-4077
+  cycles: 10  [FffxRxW]
+  note: similar as above, but 3 cycles longer:
+          - need to fetch 2 more opcode bytes
+          - need to calculate IX+o before data read can be executed
+
+res 0,a  [x 20000]
+  result:           1637
+  openmsx-old:      1637
+  openmsx-rev11643: 1643-1645
+  cycles: 2  [ff]
+
+res 0,(hl)  [x 20000]
+  result:           6523
+  openmsx-rev11643: 6522-6523
+  cycles: 8  [FfRxW]
+  note: similar to 'inc (hl)' but opcode is one byte longer
+
+res 0,(ix+o)  [x 10000]
+  result:           4083
+  openmsx-rev11643: 4076-4077
+  cycles: 10  [FfffRxW]
+  note: similar to 'inc (ix+o)'. Opcode is one byte longer, but cost
+        of IX+o can be hidden
+
+rld  [x 20000]
+  result:           6529
+  openmsx-old:      6528
+  openmsx-rev11643: 6521-6523
+  cycles: 8 cycles  [FfRxW]
+  note: similar to 'res 0,(hl)'
+
+ld hl,#0000 ; ld de,#0100 ; ld bc,40000 ; ldir  [no repeat]   (src != dst)
+  result:           11393
+  openmsx-rev11643: 11393-11394
+  cycles: 7  [FfRW]
+  note: - as expected, 3 page-breaks are needed
+        - there's no extra cycle needed to repeat the instruction
+          TODO make a specific test for this   ldi <-> ldir
+
+ld hl,#0100 ; ld de,#0100 ; ld bc,40000 ; ldir  [no repeat]   (src == dst)
+  result:           11393
+  openmsx-rev11643: 11393-11394
+  cycles: 7  [FfRW]
+  note: same timing as above, even though the read and write addresses are
+        the same, there is a page-break in between
+
+
+* Read-modify-write 2 bytes
+
+ex (sp),hl  [x 40000]
+  result:           11393
+  openmsx-rev11643: 11392-11393
+  cycles: 7  [FRrww]
+  note: - This result was unexpected to me: based on the results in the previous
+          section, I expected a page-break between the read and writes.
+        - 7 cycles is really the minimum. There are 5 bus transactions (1 opcode
+          fetch, 2 data reads and 2 data writes). Stack and instructions are in
+          different pages so there must be at least 2 page-breaks.
+        - I've confirmed the [frrww] order, see exsphl.txt for details.
+
+[ ld sp,#xxFF ]
+ex (sp),hl  [x 40000]
+  result:           14660
+  openmsx-rev11643: 14634-14635
+  cycles: 9  [FRRwW]
+  note: - Now we forced a page-break between reading/writing of the word. So two
+          additional cycles.
+        - This confirms that first two bytes are read and only then two byte are
+          written: the order [FRwRw] would only require 8 cycles
+
+[ ld sp,#01F0 ]
+ex (sp),hl  [x 200(!)]
+  result:           58
+  openmsx-rev11643: 56-58
+  cycles: 7  [FRrww]
+  note: Stack pointer in same page as instructions. But there still seems to be
+        a pagebreak between instructions and data.
+
+ex (sp),ix  [x 20000]
+  result:           6529
+  openmsx-rev11643: 6521-6523
+  cycles: 8  [FfRrww]
+
+[ ld sp,#xxFF ]
+ex (sp),ix  [x 20000]
+  result:           8153
+  openmsx-rev11643: 8152-8153
+  cycles: 10  [FfRRwW]
+
+
+
+* Jump instructions
+
+jr $+2   [x 20000]
+  result:           2455
+  openmsx-rev11643: 2459-2460
+  cycles: 3  [ffx]
+  note: one additional cycle to calculate PC+offset
+
+jr $+3 ; nop  [x 10000]    <- nop is skipped
+  result:           1229
+  openmsx-rev11643: 1229-1230
+  cycles: 3  [ffx]
+  note: - even if opcode fetching is not contiguous there is no extra
+          page-break
+        - slightly slower than test above, because code is less dense
+          and thus overall there are more opcode-fetch page-breaks
+
+jr $+2 ; nop  [x 10000]
+  result:           1636
+  openmsx-rev11643: 1637-1638
+  cycles: 3 + 1  [ffx f]
+
+[ ld a,0 ; or a ]
+jr z,$+2  [x 20000]
+  result:           2454
+  openmsx-rev11643: 2459-2460
+  cycles: 3  [ffx]
+  note: condition is true, jump is taken
+
+[ ld a,1 ; or a ]
+jr z,$+2  [x 20000]
+  result:           1637
+  openmsx-old:      1636
+  openmsx-rev11643: 1641-1642
+  cycles: 2  [ff]
+  note: condition is false, jump not taken
+        PC+offset does not need to be calculated, so no extra cycle
+
+djnz $+2  [x 20000]
+  result:           2454
+  openmsx-rev11643: 2457-2459
+  cycles: 3  [ffx]
+  note: - whether the jump is taken or not does not matter for the program flow
+        - 1/256 of the times the jump is not taken, this can explain why this
+          test is slightly faster than 'jr $+2' (but it's well within measure
+          error margin)
+
+[ ld b,0 ]
+djnz $+0  [x 2000(!)]
+  result:  i        63014
+  openmsx-rev11643: 62707-62708  (1)
+  openmsx-rev11643: 63013-63014  (2)
+  cycles: 3  [ffx]
+  note: - Only repeated instruction 2000 times (iso 20000) because otherwise
+          timer would overflow.
+        - The difference between (1) and (2) is that in (1) the djnz instruction
+          is 2-bytes aligned, while in (2) it's mis-aligned. This matters
+          because it will cause a lot more page-breaks. Maybe some of the
+          regression in the other tests could also be explained like this?
+          Till now I didn't pay much attention to instruction alignment.
+
+[ ld b,1 ]
+djnz $ ; inc b  [x 10000]
+  result:           1228
+  openmsx-rev11643: 1229-1230
+  cycles: 3  [ff f]
+  note: djnz only takes 2 cycles when it doesn't jump, same result as for jr
+
+jp $+3  [x 10000]
+  result:           2028
+  openmsx-old:      2040
+  openmsx-rev11643: not yet retested
+  cycles: 5  [Fffx]
+  note: Two additional cycles are unexpected. It can either be explained as
+        two 'x' cycles or as one 'x' cycles plus a forced page-break.
+        See also tests below.
+
+[ ld a,0 ; or a ]
+jp z,$+3  [x 10000]
+  result:           2029
+  openmsx:          2041
+  openmsx-rev11643: not yet retested
+  cycles: 5  [Fffx]
+  note: condition is true, jump is taken
+
+[ ld a,1 ; or a ]
+jp z,$+3  [x 10000]
+  result:           1229
+  openmsx:          1227
+  openmsx-rev11643: not yet retested
+  cycles: 3  [fff]
+  note: condition is false, jump not taken
+        extra 2 cycles are gone
+
+[ ld hl,start+XX ; ld bc,2 ]
+add hl,bc ; jp (hl)  [x 20000]
+  result:           3260
+  openmsx-rev11643: 3266-3268
+  cycles: 4  [F fx]
+  note: Similar as above, 2 extra cycles
+
+[ ld hl,start+XX ; ld bc,#0102 ; ld de,#FF02 ]
+add hl,bc ; jp (hl) ; add hl,de ; jp (hl)  [x 10000]
+  result:           3241
+  openmsx-old:      3240
+  openmsx-rev11643: 3201   TODO retest on real machine, I have the feeling
+                                I'm not doing the exact same test now and before
+  cycles: 8 cycles [F fx F fx]
+  note: In this test every jump has a destination in a different 256-byte page.
+        A single 'jp (hl)' instruction is still responsible for 3 cycles
+        (though the cost of the forced page-break is pushed to the next
+        instruction). This confirms that the two extra cycles in a jump are
+        one 'x' cycle plus one forced page-break (in case of two 'x' cycles,
+        this test would show yet an additional cost for the page-break).
+  note: The 64 backward jumps in the first 256-byte page and the 64 forward
+        jumps in the last page in this test are not executed.
+
+call $+3 ; pop hl  [x 10000]
+  result:           4880
+  openmsx-old:      4891
+  openmsx-rev11643: not yet retested
+  cycles: 7 + 5  [FffWw FRr]
+  note: This is again as expected, though the two extra cycles can be hidden
+        by the data-writes.
+
+[ ld a,0 ; or a ]
+call z,$+3 ; pop hl  [x 10000]
+  result:           4880
+  openmsx-old:      4891
+  openmsx-rev11643: not yet retested
+  cycles: 7 + 5  [FffWw FRr]
+  note: condition is true, call is executed
+        as expected, same result as unconditional call
+
+[ ld a,1 ; or a ]
+call z,$+3  [x 10000]
+  result:           1229
+  openmsx-old:      1228
+  openmsx-rev11643: not yet retested
+  cycles: 3  [fff]
+  note: condition is false, call not executed
+
+[ ld hl,start+XX ; ld bc,3 ]
+add hl,bc ; push hl ; ret  [x 10000]
+  result:           4884-4887
+  openmsx-rev11643: 4885-4886
+  cycles: 12 [F fxWw FRr]
+  note: 'RET' probably behaves as a 'JP (HL)' (two extra cycles), but these
+        cycles can be hidden by the two data reads
+
+[ ld hl,start+XX ; ld bc,3 ; ld a,0 ; or a ]
+add hl,bc ; push hl ; ret z  [x 10000]
+  result:           4884-4887
+  openmsx-rev11643: 4885-4886
+  cycles: 12 [F fxWw FRr]
+  note: Same test as above, but with a conditional ret that is always executed.
+        As expected same result as above.
+
+[ ld a,1 ; or a ]
+ret z  [x 40000]
+  result:           1644
+  openmsx-rev11643: 1637-1638
+  cycles: 1  [f]
+
+
+* IO instructions
+
+in a,(0)  [x 20000]
+  result:           8066
+  openmsx-old:      8126
+  openmsx-rev11643: 8152-8153
+  cycles: 10  [ffI8]
+  note: - 8 cycles for IO seems a lot, but this makes it the same speed as Z80
+             Z80:  4 cycles @ 3.5MHz
+             R800: 8 cycles @ 7MHz
+          This is needed to keep the timing on the external cartridge slots
+          the same.
+        - Besides IO port 0, i checked a lot of other ports, but not all.
+          I did check some random unused port numbers and at least one input
+          port from each IO-device in the turbor. Only the VDP ports are
+          different (see below)
+
+in a,(#98)  [x 20000]
+  result:           44286
+  openmsx-rev11643: 40713
+  cycles: +/- 54
+  note: - Can be explained by the 'intelligent' VDP-delay added by the S1990
+          Need additional tests to accurately measure this.
+        - Only IO ports 0x98-0x9B show this behaviour
+        - TODO this still differs a lot between emulation and real HW
+
+[ ld b,0 ]
+in a,(0) ; djnz $-2  [x 1]   [no page-break between in/djnz]
+  result:           126
+  openmsx-old:      132 136
+  openmsx-rev11643: not yet retested
+  cycles: 13  [ffI8 ffx]
+
+[ ld b,0 ]
+in a,(0) ; djnz $-2  [x 1]   [page-break between in/djnz]
+  result:           145
+  openmsx-old:      156
+  openmsx-rev11643: not yet retested
+  cycles: 15  [FfI8 Ffx]
+  note: - we forced a page-break between the in and the djnz instruction by
+          properly aligning the start address
+        - 2 extra cycles compared to test above, this confirms the decomposition
+          of the in instruction is [ffI8] (as opposed to [ffI7 + page-break])
+
+out (0),a  [x 20000]
+  result:           8065
+  openmsx-old:      8125
+  openmsx-rev11643: 8152-8153
+  cycles: 10  [ffI8]
+  note: similar to 'in a,(0)'
+
+out (#98),a  [x 20000]
+  result:           44285
+  openmsx-rev11643: 40713
+  cycles: +/- 54
+  note: similar to 'in a,(#98)'
+
+
+Theory: R800 is connected to a 7MHz bus, but IO is done over a 3.5MHz bus. If
+        the start of IO is at an odd clock cycle (so not at a clock edge at the
+        slower bus) there is an extra wait cycle required.
+
+in a,(0) ; [nop] x A [x 8000]
+  result:  A=0 -> 3226
+           A=1 -> 3274
+           A=2 -> 3872
+           A=3 -> 3932
+           A=4 -> 4525
+  openmsx-old: A=0 -> 3248
+               A=1 -> 3255
+               A=2 -> 3893
+               A=3 -> 3913
+               A=4 -> 4557
+  openmsx-rev11643: A=0 -> 3261
+                    A=1 -> 3269
+                    A=2 -> 3914
+                    A=3 -> 3926
+                    A=4 -> 4565
+  cycles: A=0 -> 10  [ffxoI6]
+          A=1 -> 10  [f ffxI6]
+          A=2 -> 12  [f f ffxoI6]
+          A=3 -> 12  [f f f ffxI6]
+          A=4 -> 14  [f f f f ffxoI6]
+  note: When there are an odd number of NOP instructions between two OUT
+        instructions, one of the NOPs can be executed seemingly 'for free'.
+        Or in other words when there's an even number of NOP instructions, the
+        OUT instruction has an extra penality cycle.
+        These results could be explained by assuming the following structure for
+        the out command:  3 cycles [ffx..] followed by possibly one extra
+        cycle to align to the slow 3.5MHz bus, followed by 6 cycles (= 3 cycles
+        on the slow bus) for the actual IO.
+
+
+* Internal-ROM
+
+ld hl,(#xxyy)  [x 10000]
+  with yy=#00 -> no page break
+    with xx in normal RAM
+      result: 2855
+      cycles: 7  [FffRr]
+    with xx in ROM, DRAM mode
+      result: 2855
+      cycles: 7  [FffRr]
+    with xx in ROM
+      result: 4080
+      cycles: 10  [FffRmRm]     (m -> memory wait cycle)
+  with yy=#ff -> page break during read
+    with xx in normal RAM
+      result: 3265
+      cycles: 8  [FffRR]
+    with xx in ROM, DRAM mode
+      result: 3264
+      cycles: 8  [FffRR]
+    with xx in ROM
+      result: 4080
+      cycles: 10  [FffRmRm]
+  note: - RAM or ROM in DRAM mode seems to have the same speed, including
+          page break optimization
+        - reads from ROM take 3 cycles, they don't become slower in case
+          of a page break. So it seem there are always 2 cycles to set the
+          address plus one wait cycle.
+        - I did the same test with the 'ld (#xxyy),hl' instruction (even
+          though writing to ROM doesn't make sense). I got the same results.
+
+[ ld a,128 ; or a ]
+[ BIOS ROM contains    nop (x 11) ; ret m    at address #1EB2 ]
+call #1EB2  [x 10000]
+  result: [(D)RAM]  9763-9770
+          [ROM]    18757
+  cycles: [(D)RAM] 24  [FffWw F  f  f  f  f  f  f  f  f  f  f  fRr ]   (<- 23 !!)
+          [ROM]    46  [FffWw Fm Fm Fm Fm Fm Fm Fm Fm Fm Fm Fm FmRr ]
+  note: - this confirm 3 cycles per memory read from ROM
+        - we measured 24 cycles for (D)RAM while there should only be 23,
+          this might be a measurement error though: to calculate the number
+          of cycles (in long code sequences) I compare it with the duration
+          of a NOP instruction, for long durations differences this may be
+          inaccurate
+
+
+* External-slot
+
+ld hl,(#4000)  [x 5000]
+  result: 2857
+  cycles: 14  [FffRmmmRmmm] ??
+  note: 5 cycles per memory access, close to 3 cycles (@ 3.5MHz) on Z80
+        but I'd expected it to match exactly. It's strange to have halve
+        cycles on the external 3.5MHz cartridge slots.
+
+ld (#4000),hl  [x 5000]
+  result: 2857
+  cycles: 14  [FffRmmmRmmm] ??
+
+ld a,(#4000)  [x 5000]
+  result: 1634
+  cycles: 8  [FffRmm] ??
+
+ld (#4000),a  [x 5000]
+  result: 1634
+  cycles: 8  [FffWmm] ??
+
+[ ld hl,#4000 ]
+ld a,(hl)  [x 15000]
+  result: 3669
+  cycles: 6  [FRmm] ??
+
+[ ld hl,#4000 ]
+ld (hl),a  [x 15000]
+  result: 3669
+  cycles: 6  [FWmm] ??
+
+[ ld hl,#4000 ]
+inc (hl)  [x 15000]
+  result: 7337
+  cycles: 12  [FRmmxWmmm] ??
+
+
+
+
+
+TODO: RETN, RST
+      CPI(R), LDI(R), INI(R), OUTI(R)
+      HALT (how to test?)
+
+
+
+
+
+
+
+
+
+
+
+* refresh
+
+
+	org #c000
+
+	di
+	ld	b,0
+	ld	c,0
+	out	(#e6),a
+loop	nop		; variable number of nops
+	djnz	loop
+	dec	c
+	jr	nz,loop
+	in	a,(#e6)
+	ld	l,a
+	in	a,(#e7)
+	ld	h,a
+	ret
+
+
+nops | real  | openmsx-old
+-----+-------+---------
+   0 |  8088 |  8036
+   1 | 10717 | 10716
+   2 | 13336 | 13382
+   3 | 16079 | 16042
+   4 | 18740 | 18726
+  10 | 34778 | 34753
+
+cycles (without refresh) = 65536 * nops + 197375

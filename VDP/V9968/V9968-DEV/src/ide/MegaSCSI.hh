@@ -1,0 +1,46 @@
+#ifndef MEGASCSI_HH
+#define MEGASCSI_HH
+
+#include "MB89352.hh"
+
+#include "MSXDevice.hh"
+#include "RomBlockDebuggable.hh"
+#include "SRAM.hh"
+
+#include <array>
+
+namespace openmsx {
+
+class MegaSCSI final : public MSXDevice
+{
+public:
+	explicit MegaSCSI(DeviceConfig& config);
+
+	void reset(EmuTime time) override;
+
+	[[nodiscard]] byte readMem(uint16_t address, EmuTime time) override;
+	[[nodiscard]]byte peekMem(uint16_t address, EmuTime time) const override;
+	void writeMem(uint16_t address, byte value, EmuTime time) override;
+	[[nodiscard]]const byte* getReadCacheLine(uint16_t address) const override;
+	[[nodiscard]]byte* getWriteCacheLine(uint16_t address) override;
+
+	template<typename Archive>
+	void serialize(Archive& ar, unsigned version);
+
+private:
+	[[nodiscard]] size_t getSramSize() const;
+	void setSRAM(unsigned region, byte block);
+
+private:
+	MB89352 mb89352;
+	SRAM sram;
+	RomBlockDebuggable romBlockDebug;
+
+	std::array<bool, 4> isWriteable; // which region is readonly?
+	std::array<byte, 4> mapped; // SPC block mapped in this region?
+	const byte blockMask;
+};
+
+} // namespace openmsx
+
+#endif

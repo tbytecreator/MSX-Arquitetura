@@ -1,0 +1,15 @@
+/*.swp
+/*.rpo
+/*.rom
+/*.ROM
+/.xvpics
+/*.dsk
+/*.prof
+/gmon.out
+/*.vim
+/.kdbgrc.openmsx
+/.debug
+/*.bb
+/*.bbg
+/*.da
+/GNUmakefile

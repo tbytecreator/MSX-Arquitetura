@@ -1,0 +1,19 @@
+#ifndef MIDIINDEVICE_HH
+#define MIDIINDEVICE_HH
+
+#include "Pluggable.hh"
+
+namespace openmsx {
+
+class MidiInDevice : public Pluggable
+{
+public:
+	// Pluggable (part)
+	[[nodiscard]] zstring_view getClass() const final;
+
+	virtual void signal(EmuTime time) = 0;
+};
+
+} // namespace openmsx
+
+#endif

@@ -1,0 +1,31 @@
+Probing system:
+Compiler works: g++ -m64 (LC_ALL=C.UTF-8)
+Found function: ftruncate
+Found function: mmap
+ALSA: Found header
+ALSA: Found lib
+FREETYPE: Found header
+FREETYPE: Found lib
+Error executing "pkg-config freetype2 --ftversion"
+pkgconf: unknown option -- ftversion
+Execution failed with exit code 1
+GL: Found header
+GL: Found lib
+GLEW: Found header
+GLEW: Found lib
+OGG: Found header
+OGG: Found lib
+PNG: Found header
+PNG: Found lib
+SDL2: Found header
+SDL2: Found lib
+SDL2_TTF: Found header
+SDL2_TTF: Found lib
+TCL: Found header
+TCL: Found lib
+THEORA: Found header
+THEORA: Found lib
+VORBIS: Found header
+VORBIS: Found lib
+ZLIB: Found header
+ZLIB: Found lib
