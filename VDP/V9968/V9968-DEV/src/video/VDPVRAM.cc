@@ -15,8 +15,9 @@ namespace openmsx {
 
 // class VRAMWindow
 
-VRAMWindow::VRAMWindow(Ram& vram)
+VRAMWindow::VRAMWindow(Ram& vram, bool planarBit17_)
 	: data(vram.data())
+	, planarBit17(planarBit17_)
 	// sizeMask will be initialized shortly by the VDPVRAM class
 {
 }
@@ -115,15 +116,15 @@ VDPVRAM::VDPVRAM(VDP& vdp_, unsigned size, EmuTime time)
 	, actualSize(size)
 	, vrMode(vdp.getVRMode())
 	, evrMode(vdp.isEVR())
-	, cmdReadWindow(data)
-	, cmdWriteWindow(data)
-	, nameTable(data)
-	, colorTable(data)
-	, patternTable(data)
-	, bitmapVisibleWindow(data)
-	, bitmapCacheWindow(data)
-	, spriteAttribTable(data)
-	, spritePatternTable(data)
+	, cmdReadWindow(data, vdp.hasV58())
+	, cmdWriteWindow(data, vdp.hasV58())
+	, nameTable(data, vdp.hasV58())
+	, colorTable(data, vdp.hasV58())
+	, patternTable(data, vdp.hasV58())
+	, bitmapVisibleWindow(data, vdp.hasV58())
+	, bitmapCacheWindow(data, vdp.hasV58())
+	, spriteAttribTable(data, vdp.hasV58())
+	, spritePatternTable(data, vdp.hasV58())
 {
 	setSizeMask(time);
 
@@ -172,12 +173,13 @@ void VDPVRAM::updateSpritesEnabled(bool enabled, EmuTime time)
 
 void VDPVRAM::setSizeMask(EmuTime time)
 {
+	unsigned logicalSize = vdp.hasV58() ? 0x40000 : actualSize;
 	unsigned newSizeMask = (
 		  vrMode
 		// VR = 1: 64K address space, CAS0/1 is determined by A16
-		? (std::bit_ceil(actualSize) - 1) | (1u << 16)
+		? (std::bit_ceil(logicalSize) - 1) | (1u << 16)
 		// VR = 0: 16K address space, CAS0/1 is determined by A14
-		: (std::min(std::bit_ceil(actualSize), 0x4000u) - 1) | (1u << 14)
+		: (std::min(std::bit_ceil(logicalSize), 0x4000u) - 1) | (1u << 14)
 		) | (1u << 17); // CASX (expansion RAM) is always relevant
 
 	if (evrMode) {
@@ -214,15 +216,19 @@ void VDPVRAM::updateVRMode(bool newVRmode, EmuTime time)
 	vrMode = newVRmode;
 	setSizeMask(time);
 
-	if (vrMode) {
-		// switch from VR=0 to VR=1
-		for (int i = 0x7FFF; i >=0; --i) {
-			std::swap(data[i], data[swapAddr(i)]);
-		}
-	} else {
-		// switch from VR=1 to VR=0
-		for (auto i : xrange(0x8000)) {
-			std::swap(data[i], data[swapAddr(i)]);
+	unsigned banks = vdp.hasV58() ? 16 : 1;
+	for (unsigned bank = 0; bank < banks; ++bank) {
+		unsigned base = bank << 18;
+		if (vrMode) {
+			// switch from VR=0 to VR=1
+			for (int i = 0x7FFF; i >= 0; --i) {
+				std::swap(data[base + i], data[base + swapAddr(i)]);
+			}
+		} else {
+			// switch from VR=1 to VR=0
+			for (auto i : xrange(0x8000)) {
+				std::swap(data[base + i], data[base + swapAddr(i)]);
+			}
 		}
 	}
 }
@@ -236,6 +242,23 @@ void VDPVRAM::updateEVRMode(bool newEVRMode, EmuTime time)
 	}
 	evrMode = newEVRMode;
 	setSizeMask(time);
+}
+
+void VDPVRAM::setBanks(uint8_t display, uint8_t command, EmuTime time)
+{
+	unsigned bg = unsigned(display & 15) << 18;
+	unsigned sprites = unsigned(display >> 4) << 18;
+	unsigned src = unsigned(command & 15) << 18;
+	unsigned dst = unsigned(command >> 4) << 18;
+	nameTable.setBank(bg, time);
+	colorTable.setBank(bg, time);
+	patternTable.setBank(bg, time);
+	bitmapVisibleWindow.setBank(bg, time);
+	bitmapCacheWindow.setBank(bg, time);
+	spriteAttribTable.setBank(sprites, time);
+	spritePatternTable.setBank(sprites, time);
+	cmdReadWindow.setBank(src, time);
+	cmdWriteWindow.setBank(dst, time);
 }
 
 void VDPVRAM::setRenderer(Renderer* newRenderer, EmuTime time)
@@ -333,14 +356,23 @@ void VRAMWindow::serialize(Archive& ar, unsigned /*version*/)
 }
 
 template<typename Archive>
-void VDPVRAM::serialize(Archive& ar, unsigned /*version*/)
+void VDPVRAM::serialize(Archive& ar, unsigned version)
 {
 	if constexpr (Archive::IS_LOADER) {
 		vrMode = vdp.getVRMode();
+		evrMode = vdp.isEVR();
 		setSizeMask(static_cast<MSXDevice&>(vdp).getCurrentTime());
 	}
 
-	ar.serialize_blob("data", std::span{data.data(), actualSize});
+	unsigned baseSize = vdp.hasV58() ? 0x40000 : actualSize;
+	ar.serialize_blob("data", std::span{data.data(), baseSize});
+	if (vdp.hasV58() && ar.versionAtLeast(version, 2)) {
+		ar.serialize_blob("banks", std::span{data.data() + baseSize, actualSize - baseSize});
+	} else if constexpr (Archive::IS_LOADER) {
+		if (vdp.hasV58()) {
+			std::ranges::fill(std::span{data.data() + baseSize, actualSize - baseSize}, 0);
+		}
+	}
 	ar.serialize("cmdReadWindow",       cmdReadWindow,
 	             "cmdWriteWindow",      cmdWriteWindow,
 	             "nameTable",           nameTable,
@@ -352,6 +384,10 @@ void VDPVRAM::serialize(Archive& ar, unsigned /*version*/)
 	             "bitmapCacheWindow",   bitmapCacheWindow,
 	             "spriteAttribTable",   spriteAttribTable,
 	             "spritePatternTable",  spritePatternTable);
+	if constexpr (Archive::IS_LOADER) {
+		setBanks(vdp.displayBanks(), vdp.commandBanks(),
+		         static_cast<MSXDevice&>(vdp).getCurrentTime());
+	}
 }
 INSTANTIATE_SERIALIZE_METHODS(VDPVRAM);
 

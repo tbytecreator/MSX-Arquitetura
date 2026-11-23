@@ -753,6 +753,8 @@
     <ClCompile Include="$(OpenMSXSrcDir)\video\scalers\GLDefaultScaler.cc" />
     <ClCompile Include="$(OpenMSXSrcDir)\video\Icon.cc" />
     <ClCompile Include="$(OpenMSXSrcDir)\video\Layer.cc" />
+    <ClCompile Include="$(OpenMSXSrcDir)\video\Geo3D.cc" />
+    <ClCompile Include="$(OpenMSXSrcDir)\video\Geo3DCore.cc" />
     <ClCompile Include="$(OpenMSXSrcDir)\video\GLContext.cc" />
     <ClCompile Include="$(OpenMSXSrcDir)\video\OutputSurface.cc" />
     <ClCompile Include="$(OpenMSXSrcDir)\video\PixelRenderer.cc" />

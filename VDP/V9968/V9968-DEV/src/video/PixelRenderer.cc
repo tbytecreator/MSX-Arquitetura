@@ -435,6 +435,7 @@ static constexpr bool overlap(
 
 bool PixelRenderer::checkSync(unsigned offset, EmuTime time) const
 {
+	offset |= unsigned(vdp.displayBanks() & 15) << 18;
 	// TODO: Because range is entire VRAM, offset == address.
 
 	// If display is disabled, VRAM changes will not affect the

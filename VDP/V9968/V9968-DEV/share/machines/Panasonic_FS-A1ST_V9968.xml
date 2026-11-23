@@ -62,11 +62,17 @@
 
     <VDP id="VDP">
       <version>V9968</version>
-      <vram>128</vram>
+      <vram>4096</vram>
       <io base="0x98" num="5" type="O"/> <!-- No mirroring of VDP ports -->
       <io base="0x98" num="5" type="I"/>
       <timing>0</timing> <!-- 0:V9968 compatible / 1:Normal Speed Mode uses V9958 timing. -->
     </VDP>
+
+    <Geo3D id="geo3d">
+      <io base="0x9D" num="1" type="IO"/>
+      <io base="0x9F" num="1" type="IO"/>
+      <vdp>VDP</vdp>
+    </Geo3D>
 
     <PSG id="PSG">
       <keyboardlayout>JIS</keyboardlayout>

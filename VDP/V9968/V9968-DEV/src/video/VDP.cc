@@ -231,6 +231,9 @@ VDP::VDP(const DeviceConfig& config)
 	if (hasV58()) {
 		controlValueMasks[20] |= 0x60;
 		controlValueMasks[21] = 0x01;
+		controlValueMasks[28] = 0x0F;
+		controlValueMasks[29] = 0xFF;
+		controlValueMasks[30] = 0xFF;
 	}
 
 	resetInit(); // must be done early to avoid UMRs
@@ -238,7 +241,9 @@ VDP::VDP(const DeviceConfig& config)
 	// Video RAM.
 	EmuTime time = getCurrentTime();
 	unsigned vramSize;
-	if (hasEVR()) {
+	if (hasV58()) {
+		vramSize = 4096;
+	} else if (hasEVR()) {
 		vramSize = 256;
 	} else {
 		vramSize = (isMSX1VDP() ? 16 : config.getChildDataAsInt("vram", 0));
@@ -441,6 +446,7 @@ void VDP::reset(EmuTime time)
 	if (hasV58()) {
 		vram->updateEVRMode(false, time);
 		vram->updateVRMode(true, time);
+		vram->setBanks(0, 0, time);
 	}
 	spriteChecker->reset(time);
 	cmdEngine->reset(time);
@@ -1020,6 +1026,7 @@ void VDP::executeCpuVramAccess(EmuTime time)
 			addr = ((addr << 16) | (addr >> 1)) & 0x1FFFF;
 		}
 	}
+	addr |= cpuVramBank();
 
 	bool doAccess = [&] {
 		if (!cpuExtendedVram) [[likely]] {
@@ -1355,6 +1362,12 @@ void VDP::changeRegister(uint8_t reg, uint8_t val, EmuTime time)
 		}
 		break;
 	case 21:
+		if (hasV58() && (val & 1)) {
+			cmdEngine->sync(time);
+			renderer->updateNameBase(0, time);
+			vram->setBanks(0, 0, time);
+			controlRegs[28] = controlRegs[29] = controlRegs[30] = 0;
+		}
 		if (hasV58() && (change & 0x01)) {
 			updateAddressMask((val & 0x01) == 0);
 			vram->updateEVRMode((val & 0x01) == 0, time);
@@ -1390,6 +1403,13 @@ void VDP::changeRegister(uint8_t reg, uint8_t val, EmuTime time)
 		break;
 	case 27:
 		renderer->updateHorizontalScrollLow(val, time);
+		break;
+	case 29:
+	case 30:
+		if (hasV58()) {
+			cmdEngine->sync(time);
+			if (reg == 29) renderer->updateNameBase(0, time);
+		}
 		break;
 	}
 
@@ -1486,6 +1506,10 @@ void VDP::changeRegister(uint8_t reg, uint8_t val, EmuTime time)
 		if (change & 0x01) {
 			updateNameBase(time);
 		}
+		break;
+	case 29:
+	case 30:
+		if (hasV58()) vram->setBanks(controlRegs[29], controlRegs[30], time);
 		break;
 	}
 }

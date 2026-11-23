@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<!DOCTYPE msxconfig SYSTEM 'msxconfig2.dtd'>
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Alex Moncks -->
+<msxconfig>
+  <info>
+    <name>geo3d</name>
+    <manufacturer>Alex Moncks</manufacturer>
+    <code/>
+    <release_year>2026</release_year>
+    <description>geo3d 3D coprocessor for the V9968 (transform, clipping, filled and textured faces through the VDP command engine). Emulator profile: ports 0x9D (index/status) and 0x9F (data), next to a V9968 on 0x98-0x9C.</description>
+    <type>graphics expansion</type>
+  </info>
+  <devices>
+    <Geo3D id="geo3d">
+      <io base="0x9D" num="1" type="IO"/>
+      <io base="0x9F" num="1" type="IO"/>
+      <vdp>VDP</vdp>
+    </Geo3D>
+  </devices>
+</msxconfig>

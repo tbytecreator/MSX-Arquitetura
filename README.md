@@ -32,13 +32,21 @@ Aula relacionada:
 
 ### KBRPORTS
 
+Lendo o teclado usando a PPI
+
+Aula relacionada:
+
+<https://www.youtube.com/watch?v=ApPsTI4W1U4&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=6>
+
 ### LGEXPNDR
 
 ### SLOTS
 
 Entenda a configuração dos slots do MSX.
 
-Aula relacionada: <https://www.youtube.com/watch?v=MHTIrg2tnSc&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=3>
+Aula relacionada:
+
+<https://www.youtube.com/watch?v=MHTIrg2tnSc&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=3>
 
 ## VDP
 
@@ -49,6 +57,12 @@ Codigos para aprendizado do uso do VDP do MSX
 Codigos para aprendizado do VDP do MSX 1
 
 #### PKVPK
+
+Entendendo o uso de memória RAM e memória VRAM
+
+Aula relacionada:
+
+<https://www.youtube.com/watch?v=OLmoCd8zoDQ&list=PLM6UACsvLoSCgL-CTspK3zu8EXgGUBd-F&index=7>
 
 #### REGMOD1
 

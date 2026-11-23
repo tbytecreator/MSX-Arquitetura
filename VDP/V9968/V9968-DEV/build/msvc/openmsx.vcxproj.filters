@@ -1254,6 +1254,12 @@
     <ClCompile Include="$(OpenMSXSrcDir)\video\VDP.cc">
       <Filter>video</Filter>
     </ClCompile>
+    <ClCompile Include="$(OpenMSXSrcDir)\video\Geo3D.cc">
+      <Filter>video</Filter>
+    </ClCompile>
+    <ClCompile Include="$(OpenMSXSrcDir)\video\Geo3DCore.cc">
+      <Filter>video</Filter>
+    </ClCompile>
     <ClCompile Include="$(OpenMSXSrcDir)\video\VDPCmdEngine.cc">
       <Filter>video</Filter>
     </ClCompile>

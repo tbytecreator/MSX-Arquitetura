@@ -448,6 +448,8 @@ sources = files(
     'video/DummyRenderer.cc',
     'video/DummyVideoSystem.cc',
     'video/FrameSource.cc',
+    'video/Geo3D.cc',
+    'video/Geo3DCore.cc',
     'video/Icon.cc',
     'video/Layer.cc',
     'video/OutputSurface.cc',

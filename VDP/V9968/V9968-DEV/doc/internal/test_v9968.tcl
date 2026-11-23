@@ -19,7 +19,7 @@ proc test_v9968 {} {
 	}
 	check {[string first "V9968: VDP PRINCIPAL (98H)" $screen] >= 0} \
 		"V9968CHECK did not identify the primary VDP"
-	check {[debug size {physical VRAM}] == 262144} "Expected 256 KiB of VRAM"
+	check {[debug size {physical VRAM}] == 4194304} "Expected 4 MiB of VRAM"
 	check {([debug read {VDP status regs} 1] & 0x3e) == 4} "Expected compatible ID"
 
 	write_vdp_reg 21 0

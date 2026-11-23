@@ -180,6 +180,22 @@ public:
 		return hasV58() & ((controlRegs[21] & 0x01) != 0);
 	}
 
+	[[nodiscard]] unsigned cpuVramBank() const {
+		return hasV58() ? unsigned(controlRegs[28] & 15) << 18 : 0;
+	}
+
+	[[nodiscard]] unsigned commandVramBank() const {
+		return hasV58() ? unsigned(controlRegs[30] >> 4) << 18 : 0;
+	}
+
+	[[nodiscard]] uint8_t displayBanks() const {
+		return hasV58() ? controlRegs[29] : 0;
+	}
+
+	[[nodiscard]] uint8_t commandBanks() const {
+		return hasV58() ? controlRegs[30] : 0;
+	}
+
 	[[nodiscard]] bool isV9968_Old() const {
 		return (version & VM_V9968_OLD) != 0;
 	}

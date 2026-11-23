@@ -11,6 +11,7 @@
 #include "ColecoSuperGameModule.hh"
 #include "DalSoRiR2.hh"
 #include "DebugDevice.hh"
+#include "Geo3D.hh"
 #include "DeviceConfig.hh"
 #include "DummyDevice.hh"
 #include "ESE_RAM.hh"
@@ -287,6 +288,8 @@ std::unique_ptr<MSXDevice> DeviceFactory::create(DeviceConfig& conf)
 		result = std::make_unique<DebugDevice>(conf);
 	} else if (type == "V9990") {
 		result = std::make_unique<V9990>(conf);
+	} else if (type == "Geo3D") {
+		result = std::make_unique<Geo3D>(conf);
 	} else if (type == "Video9000") {
 		result = std::make_unique<Video9000>(conf);
 	} else if (type == "ADVram") {

@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<!DOCTYPE msxconfig SYSTEM 'msxconfig2.dtd'>
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Alex Moncks -->
+<msxconfig>
+  <info>
+    <name>geo3d88</name>
+    <manufacturer>Alex Moncks</manufacturer>
+    <code/>
+    <release_year>2026</release_year>
+    <description>geo3d, cartridge profile: ports 0x8D (index/status) and 0x8F (data), next to the HRA_V9968 cartridge VDP on 0x88-0x8C. Insert after -ext HRA_V9968.</description>
+    <type>graphics expansion</type>
+  </info>
+  <devices>
+    <Geo3D id="geo3d">
+      <io base="0x8D" num="1" type="IO"/>
+      <io base="0x8F" num="1" type="IO"/>
+      <vdp>V9968</vdp>
+    </Geo3D>
+  </devices>
+</msxconfig>

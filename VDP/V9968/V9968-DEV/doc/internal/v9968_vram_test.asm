@@ -44,6 +44,48 @@ start:
 	call set_read_address
 	in a,(098h)
 	ld (0c002h),a
+
+	ld d,0
+write_banks:
+	ld a,d
+	ld b,28
+	call write_reg
+	call set_write_address
+	ld a,d
+	xor 0a0h
+	out (098h),a
+	call delay
+	inc d
+	ld a,d
+	cp 16
+	jr nz,write_banks
+
+	ld d,0
+	ld hl,0c010h
+read_banks:
+	ld a,d
+	ld b,28
+	call write_reg
+	call set_read_address
+	in a,(098h)
+	ld (hl),a
+	inc hl
+	call delay
+	inc d
+	ld a,d
+	cp 16
+	jr nz,read_banks
+
+	xor a
+	ld b,28
+	call write_reg
+	call set_read_address
+	ld a,1
+	ld b,28
+	call write_reg
+	in a,(098h)
+	ld (0c020h),a
+
 	ld a,0c7h
 	ld (0c000h),a
 	halt

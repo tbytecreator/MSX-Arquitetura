@@ -231,7 +231,7 @@ public:
 	[[nodiscard]] std::span<const uint8_t, size> getReadArea(unsigned index) const {
 		assert(isContinuous(index, size));
 		return std::span<const uint8_t, size>{
-				&data[effectiveBaseMask & (indexMask | index)],
+				&data[bankBase | (effectiveBaseMask & (indexMask | index))],
 				size};
 	}
 
@@ -257,8 +257,8 @@ public:
 		assert(isEnabled());
 		index = (index & 0x20000) | ((index >> 1) & 0xFFFF);
 		unsigned addr = effectiveBaseMask & (indexMask | index);
-		const uint8_t* ptr0 = &data[addr | 0x00000];
-		const uint8_t* ptr1 = &data[addr | 0x10000];
+		const uint8_t* ptr0 = &data[bankBase | addr];
+		const uint8_t* ptr1 = &data[bankBase | addr | 0x10000];
 		return {std::span<const uint8_t, size / 2>{ptr0, size / 2},
 		        std::span<const uint8_t, size / 2>{ptr1, size / 2}};
 	}
@@ -268,7 +268,7 @@ public:
 	  */
 	[[nodiscard]] uint8_t readNP(unsigned index) const {
 		assert(isEnabled());
-		return data[effectiveBaseMask & index];
+		return data[bankBase | (effectiveBaseMask & index)];
 	}
 
 	/** Similar to readNP, but now with planar addressing.
@@ -276,9 +276,10 @@ public:
 	  */
 	[[nodiscard]] uint8_t readPlanar(unsigned index) const {
 		assert(isEnabled());
-		index = ((index & 1) << 16) | ((index & 0x1FFFE) >> 1);
+		index = (index & (planarBit17 ? 0x20000 : 0)) |
+		        ((index & 1) << 16) | ((index & 0x1FFFE) >> 1);
 		unsigned addr = effectiveBaseMask & index;
-		return data[addr];
+		return data[bankBase | addr];
 	}
 
 	/** Is there an observer registered for this window?
@@ -310,7 +311,8 @@ public:
 	  * @return true iff the address is inside this window.
 	  */
 	[[nodiscard]] bool isInside(unsigned address) const {
-		return (address & combiMask) == baseAddr;
+		return (address & 0x3C0000) == bankBase &&
+		       ((address & 0x3FFFF) & combiMask) == baseAddr;
 	}
 
 	/** Notifies the observer of this window of a VRAM change,
@@ -320,7 +322,7 @@ public:
 	  */
 	void notify(unsigned address, EmuTime time) {
 		if (isInside(address)) {
-			observer->updateVRAM(address - baseAddr, time);
+			observer->updateVRAM((address & 0x3FFFF) - baseAddr, time);
 		}
 	}
 
@@ -332,8 +334,16 @@ public:
 		if (isEnabled()) {
 			setMask(origBaseMask, indexMask, newSizeMask, time);
 		}
+
 		// only apply sizeMask after observers have been notified
 		sizeMask = newSizeMask;
+	}
+
+	void setBank(unsigned bank, EmuTime time) {
+		if (bankBase != bank) {
+			observer->updateWindow(isEnabled(), time);
+			bankBase = bank;
+		}
 	}
 
 	template<typename Archive>
@@ -352,11 +362,13 @@ private:
 	/** Create a new window.
 	  * Initially, the window is disabled; use setRange to enable it.
 	  */
-	explicit VRAMWindow(Ram& vram);
+	VRAMWindow(Ram& vram, bool planarBit17);
 
 	/** Pointer to the entire VRAM data.
 	  */
 	uint8_t* data;
+	bool planarBit17;
+	unsigned bankBase = 0;
 
 	/** Observer associated with this VRAM window.
 	  * It will be called when changes occur within the window.
@@ -436,7 +448,7 @@ public:
 		assert(vdp.isInsideFrame(time));
 
 		// handle mirroring and non-present ram chips
-		address &= sizeMask;
+		address = (address & sizeMask) | vdp.commandVramBank();
 		if (address >= actualSize) [[unlikely]] {
 			// 192kb vram is mirroring is handled elsewhere
 			assert(address < 0x30000);
@@ -461,7 +473,7 @@ public:
 		assert(vdp.isInsideFrame(time));
 
 		// handle mirroring and non-present ram chips
-		address &= sizeMask;
+		address &= sizeMask | (vdp.hasV58() ? 0x3C0000 : 0);
 		if (address >= actualSize) [[unlikely]] {
 			// 192kb vram is mirroring is handled elsewhere
 			assert(address < 0x30000);
@@ -496,7 +508,7 @@ public:
 		#endif
 		assert(vdp.isInsideFrame(time));
 
-		address &= sizeMask;
+		address &= sizeMask | (vdp.hasV58() ? 0x3C0000 : 0);
 		if (cmdWriteWindow.isInside(address)) {
 			cmdEngine->sync(time);
 		}
@@ -543,6 +555,7 @@ public:
 	  * 
 	  */
 	void updateEVRMode(bool mode, EmuTime time);
+	void setBanks(uint8_t display, uint8_t command, EmuTime time);
 
 	void setRenderer(Renderer* renderer, EmuTime time);
 
@@ -708,6 +721,7 @@ private:
 	VRAMWindow spriteAttribTable;
 	VRAMWindow spritePatternTable;
 };
+SERIALIZE_CLASS_VERSION(VDPVRAM, 2);
 
 } // namespace openmsx
 

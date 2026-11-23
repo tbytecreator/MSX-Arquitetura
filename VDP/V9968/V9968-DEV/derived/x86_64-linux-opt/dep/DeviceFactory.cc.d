@@ -92,11 +92,11 @@ derived/x86_64-linux-opt/obj/DeviceFactory.cc.o: src/DeviceFactory.cc \
  src/sound/EmuTimer.hh src/utils/FixedPoint.hh src/serialize.hh \
  src/cpu/IRQHelper.hh src/debugger/Probe.hh src/sound/YMF278.hh \
  src/memory/TrackedRam.hh src/utils/optional_fixed_span.hh \
- src/DebugDevice.hh src/settings/FilenameSetting.hh src/DummyDevice.hh \
- src/memory/ESE_RAM.hh src/memory/RomBlockDebuggable.hh \
- src/memory/ESE_SCC.hh src/memory/FraelSwitchableROM.hh \
- src/ide/GoudaSCSI.hh src/ide/WD33C93.hh src/ide/SCSI.hh \
- src/ide/SCSIDevice.hh src/utils/AlignedBuffer.hh \
+ src/DebugDevice.hh src/settings/FilenameSetting.hh src/video/Geo3D.hh \
+ src/video/Geo3DCore.hh src/DummyDevice.hh src/memory/ESE_RAM.hh \
+ src/memory/RomBlockDebuggable.hh src/memory/ESE_SCC.hh \
+ src/memory/FraelSwitchableROM.hh src/ide/GoudaSCSI.hh src/ide/WD33C93.hh \
+ src/ide/SCSI.hh src/ide/SCSIDevice.hh src/utils/AlignedBuffer.hh \
  src/serial/JVCMSXMIDI.hh src/serial/MC6850.hh \
  src/serial/MidiInConnector.hh src/Connector.hh \
  src/serial/SerialDataInterface.hh src/serial/MidiOutConnector.hh \
@@ -379,6 +379,8 @@ src/memory/TrackedRam.hh:
 src/utils/optional_fixed_span.hh:
 src/DebugDevice.hh:
 src/settings/FilenameSetting.hh:
+src/video/Geo3D.hh:
+src/video/Geo3DCore.hh:
 src/DummyDevice.hh:
 src/memory/ESE_RAM.hh:
 src/memory/RomBlockDebuggable.hh:
