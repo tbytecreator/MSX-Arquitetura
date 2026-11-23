@@ -19,7 +19,7 @@ fi
 
 name=$(basename "$source_file")
 name=${name%.*}
-dev_dir=$(CDPATH= cd -- ../../../V9968-DEV && pwd)
+dev_dir=$(CDPATH= cd -- ../V9968-DEV && pwd)
 emulator=$dev_dir/derived/x86_64-linux-opt/bin/openmsx
 if [ ! -x "$emulator" ] || [ ! -d "$dev_dir/roms" ]; then
     echo "Emulador ou pasta de ROMs nao encontrados em $dev_dir" >&2
